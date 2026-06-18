@@ -1,36 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 
-export default function ResetPasswordPage() {
-
-  const params =
-    useSearchParams();
-
-  const router =
-    useRouter();
+function ResetPasswordForm() {
+  const params = useSearchParams();
+  const router = useRouter();
 
   const email =
     params.get("email") || "";
 
-  const [otp,setOtp] =
+  const [otp, setOtp] =
     useState("");
 
-  const [password,setPassword] =
+  const [password, setPassword] =
     useState("");
 
-  async function resetPassword(){
-
+  async function resetPassword() {
     const res = await fetch(
       "/api/reset-password",
       {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
         },
-        body:JSON.stringify({
+        body: JSON.stringify({
           email,
           otp,
           password,
@@ -41,22 +37,14 @@ export default function ResetPasswordPage() {
     const data =
       await res.json();
 
-    if(res.ok){
-
+    if (res.ok) {
       alert(
         "เปลี่ยนรหัสผ่านสำเร็จ"
       );
 
-      router.push(
-        "/login"
-      );
-
-    }else{
-
-      alert(
-        data.error
-      );
-
+      router.push("/login");
+    } else {
+      alert(data.error);
     }
   }
 
@@ -69,7 +57,7 @@ export default function ResetPasswordPage() {
 
       <input
         value={otp}
-        onChange={(e)=>
+        onChange={(e) =>
           setOtp(e.target.value)
         }
         placeholder="OTP"
@@ -79,7 +67,7 @@ export default function ResetPasswordPage() {
       <input
         type="password"
         value={password}
-        onChange={(e)=>
+        onChange={(e) =>
           setPassword(
             e.target.value
           )
@@ -96,5 +84,19 @@ export default function ResetPasswordPage() {
       </button>
 
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-10">
+          Loading...
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

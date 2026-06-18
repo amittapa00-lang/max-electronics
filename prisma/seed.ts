@@ -19,7 +19,6 @@ async function main() {
         name: "Mitsubishi FX5U",
         slug: "mitsubishi-fx5u",
         description: "PLC Controller",
-        image: "/products/fx5u.jpg",
         price: 12900,
         stock: 10,
         categoryId: category.id,
@@ -28,13 +27,11 @@ async function main() {
         name: "Delta VFD",
         slug: "delta-vfd",
         description: "Inverter",
-        image: "/products/vfd.jpg",
         price: 8900,
         stock: 15,
         categoryId: category.id,
       },
     ],
-    skipDuplicates: true,
   });
 }
 
@@ -47,5 +44,3 @@ main()
     await prisma.$disconnect();
     process.exit(1);
   });
-
-  

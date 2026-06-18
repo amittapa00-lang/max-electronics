@@ -210,8 +210,6 @@ export default function AboutPage() {
                 <a
                   href="tel:0946861981"
                   style={{ color: "inherit", textDecoration: "none", transition: "color 0.2s" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "#2563EB")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "inherit")}
                 >
                   094-686-1981
                 </a>
@@ -224,13 +222,14 @@ export default function AboutPage() {
               label="อีเมล"
               value={
                 <a
-                  href="mailto:maxtechelectric1@gmail.com"
-                  style={{ color: "inherit", textDecoration: "none", transition: "color 0.2s" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "#2563EB")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "inherit")}
-                >
-                  maxtechelectric1@gmail.com
-                </a>
+  href="mailto:maxtechelectric1@gmail.com"
+  style={{
+    color: "#2563EB",
+    textDecoration: "none",
+  }}
+>
+  maxtechelectric1@gmail.com
+</a>
               }
               sub="ตอบกลับภายใน 24 ชม."
             />

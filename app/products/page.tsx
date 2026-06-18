@@ -13,7 +13,7 @@ export default async function ProductsPage({
 }) {
   const { category, search } = await searchParams;
 
-  const categories = await prisma.category.findMany({
+  const categories = (await prisma.category.findMany({
     where: { parentId: null },
     include: {
       children: {
@@ -22,7 +22,7 @@ export default async function ProductsPage({
       },
       _count: { select: { products: true } },
     },
-  }) ?? [];
+  })) ?? [];
 
   const products = await prisma.product.findMany({
     where: {
@@ -40,8 +40,8 @@ export default async function ProductsPage({
         search
           ? {
               OR: [
-                { name: { contains: search, mode: "insensitive" } },
-                { productCode: { contains: search, mode: "insensitive" } },
+                { name: { contains: search } },
+                { productCode: { contains: search } },
               ],
             }
           : {},
@@ -99,7 +99,7 @@ export default async function ProductsPage({
           line-height: 1.2;
         }
 
-        /* ── Search Bar (Flexbox ป้องกันปุ่มทับซ้อน) ── */
+        /* ── Search Bar ── */
         .pg-search-wrap {
           display: flex;
           position: relative;
@@ -214,7 +214,7 @@ export default async function ProductsPage({
           color: #4338CA;
         }
 
-        /* ── Product Grid (มือถือแสดง 2 คอลลัมน์คู่) ── */
+        /* ── Product Grid ── */
         .pg-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -363,7 +363,7 @@ export default async function ProductsPage({
           color: #94A3B8;
         }
 
-        /* 💻 ── หน้าจอขนาดใหญ่ (Desktop / Tablet) ── */
+        /* 💻 ── Desktop Layout ── */
         @media (min-width: 768px) {
           .pg-root {
             padding: 40px 40px 80px;
