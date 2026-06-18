@@ -204,48 +204,59 @@ export default function AboutPage() {
           <SectionLabel>ติดต่อเรา</SectionLabel>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12, marginTop: "0.75rem" }}>
             <ContactCard
-  icon={<Phone size={16} />}
-  label="โทรศัพท์"
-  value={
-    <a
-      href="tel:0946861981"
-      className="hover:text-blue-600 transition"
-    >
-      094-686-1981
-    </a>
-  }
-  sub="จันทร์–เสาร์ 08:00–17:00"
-/>
+              icon={<Phone size={16} />}
+              label="โทรศัพท์"
+              value={
+                <a
+                  href="tel:0946861981"
+                  style={{ color: "inherit", textDecoration: "none", transition: "color 0.2s" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#2563EB")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "inherit")}
+                >
+                  094-686-1981
+                </a>
+              }
+              sub="จันทร์–เสาร์ 08:00–17:00"
+            />
 
-<ContactCard
-  icon={<Mail size={16} />}
-  label="อีเมล"
-  value={
-    <a
-      href="mailto:maxtechelectric1@gmail.com"
-      className="hover:text-blue-600 transition"
-    >
-      maxtechelectric1@gmail.com
-    </a>
-  }
-  sub="ตอบกลับภายใน 24 ชม."
-/>
-           <ContactCard
-  icon={<MapPin size={16} />}
-  label="ที่อยู่"
-  value="ถนนท้ายบ้าน ตำบลท้ายบ้าน อำเภอเมืองสมุทรปราการ จังหวัดสมุทรปราการ 10280"
-  sub={
-    <a
-      href="https://maps.google.com/?q=13.558246,100.594413"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-blue-600 hover:underline"
-    >
-      ดูแผนที่และเส้นทาง
-    </a>
-  }
-/>
-            <ContactCard icon={<Clock3 size={16} />} label="เวลาทำการ" value="09:00 – 18:00 น." sub="ปิดวันอาทิตย์และวันหยุด" />
+            <ContactCard
+              icon={<Mail size={16} />}
+              label="อีเมล"
+              value={
+                <a
+                  href="mailto:maxtechelectric1@gmail.com"
+                  style={{ color: "inherit", textDecoration: "none", transition: "color 0.2s" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#2563EB")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "inherit")}
+                >
+                  maxtechelectric1@gmail.com
+                </a>
+              }
+              sub="ตอบกลับภายใน 24 ชม."
+            />
+
+            <ContactCard
+              icon={<MapPin size={16} />}
+              label="ที่อยู่"
+              value="ถนนท้ายบ้าน ตำบลท้ายบ้าน อำเภอเมืองสมุทรปราการ จังหวัดสมุทรปราการ 10280"
+              sub={
+                <a
+                  href="https://maps.google.com/?q=13.558246,100.594413"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#2563EB", textDecoration: "underline" }}
+                >
+                  ดูแผนที่และเส้นทาง
+                </a>
+              }
+            />
+
+            <ContactCard 
+              icon={<Clock3 size={16} />} 
+              label="เวลาทำการ" 
+              value="09:00 – 18:00 น." 
+              sub="ปิดวันอาทิตย์และวันหยุด" 
+            />
           </div>
         </section>
 
@@ -282,7 +293,14 @@ function FeatureCard({ icon, title, desc }: FeatureCardProps) {
   );
 }
 
-interface ContactCardProps { icon: ReactNode; label: string; value: string; sub: string }
+// 🛠️ แก้ไขเรียบร้อย: เปลี่ยนประเภทจาก string เป็น ReactNode เพื่อรอบรับการส่ง Component ย่อยและ Tag HTML
+interface ContactCardProps { 
+  icon: ReactNode; 
+  label: string; 
+  value: ReactNode; 
+  sub: ReactNode; 
+}
+
 function ContactCard({ icon, label, value, sub }: ContactCardProps) {
   return (
     <div style={{ background: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "1.1rem 1.25rem", display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -291,8 +309,9 @@ function ContactCard({ icon, label, value, sub }: ContactCardProps) {
       </div>
       <div>
         <p style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 500, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 2 }}>{label}</p>
-        <p style={{ fontSize: 14, fontWeight: 500, color: "#111", marginBottom: 2 }}>{value}</p>
-        <p style={{ fontSize: 12, color: "#9CA3AF" }}>{sub}</p>
+        {/* เปลี่ยนจากโครงสร้าง <p> เป็น <div> เพื่อให้ถูกต้องตามหลัก Semantic HTML เมื่อมีแท็ก <a> อยู่ภายใน */}
+        <div style={{ fontSize: 14, fontWeight: 500, color: "#111", marginBottom: 2 }}>{value}</div>
+        <div style={{ fontSize: 12, color: "#9CA3AF" }}>{sub}</div>
       </div>
     </div>
   );
