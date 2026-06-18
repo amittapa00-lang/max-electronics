@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `product` ADD COLUMN `isRecommended` BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN `sold` INTEGER NOT NULL DEFAULT 0;
