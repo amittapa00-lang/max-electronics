@@ -179,10 +179,13 @@ export default async function OrderDetailPage({
   return (
     <main style={{ maxWidth: 960, margin: "0 auto", padding: "40px 24px", fontFamily: "sans-serif" }}>
 
-      {/* Header */}
+      {/* Header — เพิ่มเลขที่สั่งซื้อเข้ามาตรงนี้ */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 3 }}>คำสั่งซื้อ</p>
+          <h1 style={{ fontSize: 24, fontWeight: 600, color: "#111", margin: 0 }}>
+            #{order.id}
+          </h1>
         </div>
         <StatusBadge status={order.status} />
       </div>
