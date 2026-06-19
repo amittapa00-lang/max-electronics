@@ -485,14 +485,16 @@ export default async function ProductsPage({
                       className="pg-card"
                     >
                       <div className="pg-card-img-wrap">
-                        <Image
-                          src={product.images?.[0]?.imageUrl || "/no-image.jpg"}
-                          alt={product.name}
-                          fill
-                          sizes="(max-width: 768px) 50vw, 20vw"
-                          className="pg-card-img"
-                          style={{ objectFit: "cover" }}
-                        />
+                        <img
+  src={product.images?.[0]?.imageUrl || "/no-image.jpg"}
+  alt={product.name}
+  className="pg-card-img"
+  style={{
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  }}
+/>
                         {product.stock === 0 && (
                           <div className="pg-card-out-of-stock-overlay">
                             <span className="pg-card-out-badge">สินค้าหมด</span>
