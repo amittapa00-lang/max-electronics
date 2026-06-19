@@ -1,69 +1,51 @@
-import { writeFile } from "fs/promises";
 import { NextResponse } from "next/server";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
+import { v2 as cloudinary } from "cloudinary";
 
-export async function POST(
-  req: Request
-) {
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
+
+export async function POST(req: Request) {
   try {
-    const formData =
-      await req.formData();
+    const formData = await req.formData();
 
-    const file =
-      formData.get(
-        "file"
-      ) as File;
+    const file = formData.get("file") as File;
 
     if (!file) {
       return NextResponse.json(
-        {
-          error:
-            "ไม่พบไฟล์",
-        },
-        {
-          status: 400,
-        }
+        { error: "ไม่พบไฟล์" },
+        { status: 400 }
       );
     }
 
-    const bytes =
-      await file.arrayBuffer();
+    const bytes = await file.arrayBuffer();
 
-    const buffer =
-      Buffer.from(bytes);
+    const buffer = Buffer.from(bytes);
 
-    const fileName =
-      uuidv4() +
-      "-" +
-      file.name;
+    const base64 = `data:${file.type};base64,${buffer.toString(
+      "base64"
+    )}`;
 
-    const uploadPath =
-      path.join(
-        process.cwd(),
-        "public",
-        "uploads",
-        fileName
+    const result =
+      await cloudinary.uploader.upload(
+        base64,
+        {
+          folder: "payment-slips",
+        }
       );
-
-    await writeFile(
-      uploadPath,
-      buffer
-    );
-
-    const imageUrl =
-      "/uploads/" +
-      fileName;
 
     return NextResponse.json({
       success: true,
-      imageUrl,
+      imageUrl: result.secure_url,
     });
-  } catch {
+  } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
       {
-        error:
-          "อัปโหลดสลิปไม่สำเร็จ",
+        error: "อัปโหลดสลิปไม่สำเร็จ",
       },
       {
         status: 500,
