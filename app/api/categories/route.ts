@@ -1,27 +1,22 @@
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
 
-export async function POST(
-  req: Request
-) {
-  const formData =
-    await req.formData();
+export const dynamic = "force-dynamic";
 
-  const name =
-    formData.get("name") as string;
+export async function POST(req: Request) {
+  const formData = await req.formData();
 
-  const parentId =
-    formData.get("parentId") as string;
+  const name = formData.get("name") as string;
+  const parentId = formData.get("parentId") as string;
 
   await prisma.category.create({
     data: {
       name,
-
-      parentId: parentId
-        ? Number(parentId)
-        : null,
+      parentId: parentId ? Number(parentId) : null,
     },
   });
 
-  redirect("/admin/categories");
+  return NextResponse.redirect(
+    new URL("/admin/categories", req.url)
+  );
 }
