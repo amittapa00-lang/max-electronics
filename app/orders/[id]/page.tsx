@@ -184,7 +184,7 @@ export default async function OrderDetailPage({
         <div>
           <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 3 }}>คำสั่งซื้อ</p>
           <h1 style={{ fontSize: 24, fontWeight: 600, color: "#111", margin: 0 }}>
-            #{order.id}
+            รหัสคำสั่งซื้อ maxelectronics#{order.id}
           </h1>
         </div>
         <StatusBadge status={order.status} />
