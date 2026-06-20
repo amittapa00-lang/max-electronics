@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { NextAuthOptions } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
@@ -18,78 +19,78 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        if (!credentials)
-          return null;
+        if (!credentials) return null;
 
         const user =
           await prisma.user.findUnique({
             where: {
-              email:
-                credentials.email,
+              email: credentials.email,
             },
           });
 
-        if (!user)
-          return null;
+        if (!user) return null;
 
-        const valid =
-  await bcrypt.compare(
-    credentials.password,
-    user.password
-  );
+        const valid = await bcrypt.compare(
+          credentials.password,
+          user.password || ""
+        );
 
-if (!valid)
-  return null;
+        if (!valid) return null;
 
-/* เช็คยืนยันอีเมล */
+        if (!user.emailVerified) {
+          throw new Error(
+            "กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ"
+          );
+        }
 
-if (!user.emailVerified) {
-  throw new Error(
-    "กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ"
-  );
-}
-
-return {
-  id: String(user.id),
-  name: user.name,
-  email: user.email,
-  role: user.role,
-};
+        return {
+          id: String(user.id),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        };
       },
+    }),
+
+    GoogleProvider({
+      clientId:
+        process.env.GOOGLE_CLIENT_ID!,
+      clientSecret:
+        process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
 
   callbacks: {
-  async jwt({
-    token,
-    user,
-  }) {
-    if (user) {
-      token.role =
-        (user as {
-          role?: string;
-        }).role;
-    }
+    async jwt({
+      token,
+      user,
+    }) {
+      if (user) {
+        token.role =
+          (user as {
+            role?: string;
+          }).role;
+      }
 
-    return token;
+      return token;
+    },
+
+    async session({
+      session,
+      token,
+    }) {
+      if (session.user) {
+        (
+          session.user as {
+            role?: string;
+          }
+        ).role =
+          token.role as string;
+      }
+
+      return session;
+    },
   },
-
-  async session({
-    session,
-    token,
-  }) {
-    if (session.user) {
-      (
-        session.user as {
-          role?: string;
-        }
-      ).role =
-        token.role as string;
-    }
-
-    return session;
-  },
-},
 
   pages: {
     signIn: "/login",
