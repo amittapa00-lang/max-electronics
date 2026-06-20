@@ -82,6 +82,11 @@ export default async function ProductsPage({
           gap: 16px;
         }
 
+        .pg-title-group {
+          display: flex;
+          flex-direction: column;
+        }
+
         .pg-eyebrow {
           font-size: 11px;
           font-weight: 600;
@@ -99,31 +104,17 @@ export default async function ProductsPage({
           line-height: 1.2;
         }
 
-        /* ── Search Bar ── */
+        /* ── Search Bar (ปรับปรุงสัดส่วนสำหรับมือถือ) ── */
         .pg-search-wrap {
           display: flex;
           position: relative;
           width: 100%;
-          gap: 8px;
-        }
-
-        .pg-search-icon {
-          position: absolute;
-          left: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          color: #94A3B8;
-          pointer-events: none;
-          font-size: 16px;
-          line-height: 1;
-          z-index: 10;
         }
 
         .pg-search-input {
-          flex: 1;
-          min-width: 0;
-          height: 44px;
-          padding: 0 16px 0 42px;
+          width: 100%; /* ให้ช่องพิมพ์ยาวเต็มพื้นที่ 100% บนมือถือ */
+          height: 46px;
+          padding: 0 48px 0 16px; /* เว้นระยะด้านขวาไว้สำหรับใส่ปุ่มไอคอนแว่นขยาย */
           border: 1.5px solid #E2E8F0;
           border-radius: 12px;
           font-size: 14px;
@@ -138,22 +129,33 @@ export default async function ProductsPage({
           box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
         }
 
-        .pg-search-btn {
-          flex-shrink: 0;
+        /* ปุ่มค้นหาแบบไอคอนแว่นขยาย (ใช้บนมือถือเพื่อประหยัดพื้นที่) */
+        .pg-mobile-search-btn {
+          position: absolute;
+          right: 4px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 38px;
+          height: 38px;
           background: #6366F1;
           color: #fff;
           border: none;
-          border-radius: 12px;
-          height: 44px;
-          padding: 0 20px;
+          border-radius: 10px;
           font-size: 14px;
-          font-weight: 600;
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           transition: background 0.15s;
         }
 
-        .pg-search-btn:hover {
+        .pg-mobile-search-btn:hover {
           background: #4F46E5;
+        }
+
+        /* ซ่อนปุ่มค้นหาขนาดใหญ่แบบมีตัวหนังสือบนหน้าจอมือถือ */
+        .pg-search-btn {
+          display: none;
         }
 
         /* ── Body Layout ── */
@@ -363,7 +365,7 @@ export default async function ProductsPage({
           color: #94A3B8;
         }
 
-        /* 💻 ── Desktop Layout ── */
+        /* 💻 ── Desktop Layout (คืนค่าให้ปุ่มกดค้นหาขนาดใหญ่แสดงผลบนคอมพิวเตอร์) ── */
         @media (min-width: 768px) {
           .pg-root {
             padding: 40px 40px 80px;
@@ -379,8 +381,40 @@ export default async function ProductsPage({
             font-size: 26px;
           }
 
+          /* บน Desktop จะดันปุ่มและช่องพิมพ์ให้แยกกันตามเดิม */
           .pg-search-wrap {
             max-width: 400px;
+            gap: 8px;
+          }
+
+          .pg-search-input {
+            flex: 1;
+            padding: 0 16px 0 16px; /* คืนค่า padding ปกติ ไม่ต้องหลบไอคอน */
+          }
+
+          /* ซ่อนปุ่มไอคอนแว่นขยายบน Desktop */
+          .pg-mobile-search-btn {
+            display: none;
+          }
+
+          /* แสดงปุ่มค้นหาขนาดใหญ่แบบมีตัวหนังสือบน Desktop */
+          .pg-search-btn {
+            display: block;
+            flex-shrink: 0;
+            background: #6366F1;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            height: 46px;
+            padding: 0 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+          }
+
+          .pg-search-btn:hover {
+            background: #4F46E5;
           }
 
           .pg-body {
@@ -426,7 +460,6 @@ export default async function ProductsPage({
           </div>
 
           <form action="/products" className="pg-search-wrap">
-            <span className="pg-search-icon">🔍</span>
             <input
               type="text"
               name="search"
@@ -438,6 +471,11 @@ export default async function ProductsPage({
             {category && (
               <input type="hidden" name="category" value={category} />
             )}
+            
+            {/* ปุ่มแว่นขยายขนาดกะทัดรัด (แสดงเฉพาะบนมือถือ) */}
+            <button type="submit" className="pg-mobile-search-btn" aria-label="Search">🔍</button>
+            
+            {/* ปุ่มคำว่า ค้นหา ขนาดใหญ่ (แสดงเฉพาะบน Desktop) */}
             <button type="submit" className="pg-search-btn">ค้นหา</button>
           </form>
         </div>
@@ -485,16 +523,14 @@ export default async function ProductsPage({
                       className="pg-card"
                     >
                       <div className="pg-card-img-wrap">
-                        <img
-  src={product.images?.[0]?.imageUrl || "/no-image.jpg"}
-  alt={product.name}
-  className="pg-card-img"
-  style={{
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  }}
-/>
+                        <Image
+                          src={product.images?.[0]?.imageUrl || "/no-image.jpg"}
+                          alt={product.name}
+                          fill
+                          sizes="(max-width: 768px) 50vw, 20vw"
+                          className="pg-card-img"
+                          style={{ objectFit: "cover" }}
+                        />
                         {product.stock === 0 && (
                           <div className="pg-card-out-of-stock-overlay">
                             <span className="pg-card-out-badge">สินค้าหมด</span>

@@ -25,7 +25,6 @@ export default function AboutPage() {
       }}
     >
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "3rem 1.25rem 4rem" }}>
-
         {/* ── HERO ── */}
         <section style={{ marginBottom: "3.5rem" }}>
           <div
@@ -75,7 +74,6 @@ export default function AboutPage() {
             พร้อมบริการหลังการขายที่รวดเร็วและเชื่อถือได้ รองรับทั้งลูกค้ารายย่อยและโรงงานอุตสาหกรรม
           </p>
 
-          {/* Stat pills */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {[
               { value: "10+", label: "ปีประสบการณ์" },
@@ -111,15 +109,7 @@ export default function AboutPage() {
             marginBottom: "2rem",
           }}
         >
-          {/* วิสัยทัศน์ */}
-          <div
-            style={{
-              background: "#2563EB",
-              borderRadius: 16,
-              padding: "1.75rem",
-              color: "#fff",
-            }}
-          >
+          <div style={{ background: "#2563EB", borderRadius: 16, padding: "1.75rem", color: "#fff" }}>
             <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.55)", marginBottom: "0.75rem" }}>
               วิสัยทัศน์
             </p>
@@ -129,15 +119,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* พันธกิจ */}
-          <div
-            style={{
-              background: "#fff",
-              border: "0.5px solid #E5E7EB",
-              borderRadius: 16,
-              padding: "1.75rem",
-            }}
-          >
+          <div style={{ background: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 16, padding: "1.75rem" }}>
             <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: ".08em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: "0.75rem" }}>
               พันธกิจ
             </p>
@@ -207,49 +189,32 @@ export default function AboutPage() {
               icon={<Phone size={16} />}
               label="โทรศัพท์"
               value={
-                <a
-                  href="tel:0946861981"
-                  style={{ color: "inherit", textDecoration: "none", transition: "color 0.2s" }}
-                >
+                <a href="tel:0946861981" style={{ color: "inherit", textDecoration: "none" }}>
                   094-686-1981
                 </a>
               }
               sub="จันทร์–เสาร์ 08:00–17:00"
             />
-
             <ContactCard
               icon={<Mail size={16} />}
               label="อีเมล"
               value={
-                <a
-  href="mailto:maxtechelectric1@gmail.com"
-  style={{
-    color: "#2563EB",
-    textDecoration: "none",
-  }}
->
-  maxtechelectric1@gmail.com
-</a>
+                <a href="mailto:maxtechelectric1@gmail.com" style={{ color: "#2563EB", textDecoration: "none" }}>
+                  maxtechelectric1@gmail.com
+                </a>
               }
               sub="ตอบกลับภายใน 24 ชม."
             />
-
             <ContactCard
               icon={<MapPin size={16} />}
               label="ที่อยู่"
               value="ถนนท้ายบ้าน ตำบลท้ายบ้าน อำเภอเมืองสมุทรปราการ จังหวัดสมุทรปราการ 10280"
               sub={
-                <a
-                  href="https://maps.google.com/?q=13.558246,100.594413"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#2563EB", textDecoration: "underline" }}
-                >
+                <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" style={{ color: "#2563EB", textDecoration: "underline" }}>
                   ดูแผนที่และเส้นทาง
                 </a>
               }
             />
-
             <ContactCard 
               icon={<Clock3 size={16} />} 
               label="เวลาทำการ" 
@@ -258,18 +223,14 @@ export default function AboutPage() {
             />
           </div>
         </section>
-
       </div>
     </main>
   );
 }
 
-/* ── Sub-components ── */
-
-interface SectionLabelProps { children: ReactNode }
-function SectionLabel({ children }: SectionLabelProps) {
+function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: ".08em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 0 }}>
+    <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: ".08em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: 8 }}>
       {children}
     </p>
   );
@@ -279,8 +240,7 @@ function Divider() {
   return <hr style={{ border: "none", borderTop: "0.5px solid #E5E7EB", margin: "2rem 0" }} />;
 }
 
-interface FeatureCardProps { icon: ReactNode; title: string; desc: string }
-function FeatureCard({ icon, title, desc }: FeatureCardProps) {
+function FeatureCard({ icon, title, desc }: { icon: ReactNode; title: string; desc: string }) {
   return (
     <div style={{ background: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "1.25rem" }}>
       <div style={{ width: 36, height: 36, borderRadius: 8, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563EB", marginBottom: "0.75rem" }}>
@@ -292,15 +252,7 @@ function FeatureCard({ icon, title, desc }: FeatureCardProps) {
   );
 }
 
-// 🛠️ แก้ไขเรียบร้อย: เปลี่ยนประเภทจาก string เป็น ReactNode เพื่อรอบรับการส่ง Component ย่อยและ Tag HTML
-interface ContactCardProps { 
-  icon: ReactNode; 
-  label: string; 
-  value: ReactNode; 
-  sub: ReactNode; 
-}
-
-function ContactCard({ icon, label, value, sub }: ContactCardProps) {
+function ContactCard({ icon, label, value, sub }: { icon: ReactNode; label: string; value: ReactNode; sub: ReactNode }) {
   return (
     <div style={{ background: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "1.1rem 1.25rem", display: "flex", gap: 12, alignItems: "flex-start" }}>
       <div style={{ width: 32, height: 32, borderRadius: 8, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563EB", flexShrink: 0 }}>
@@ -308,7 +260,6 @@ function ContactCard({ icon, label, value, sub }: ContactCardProps) {
       </div>
       <div>
         <p style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 500, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 2 }}>{label}</p>
-        {/* เปลี่ยนจากโครงสร้าง <p> เป็น <div> เพื่อให้ถูกต้องตามหลัก Semantic HTML เมื่อมีแท็ก <a> อยู่ภายใน */}
         <div style={{ fontSize: 14, fontWeight: 500, color: "#111", marginBottom: 2 }}>{value}</div>
         <div style={{ fontSize: 12, color: "#9CA3AF" }}>{sub}</div>
       </div>
