@@ -37,11 +37,11 @@ export default async function Home() {
   return (
     <main className="bg-slate-50/50 min-h-screen font-sans">
 
-      {/* ─── 1. HERO SECTION ─── */}
+      {/* ─── 1. HERO SECTION (Optimized for SEO) ─── */}
       <section className="relative w-full min-h-125 lg:min-h-137.5 overflow-hidden flex items-center bg-slate-950 py-10 lg:py-0">
         <Image 
           src="/banner_.png" 
-          alt="MaxTech Electric Banner" 
+          alt="MaxTech Electric - แหล่งรวมอุปกรณ์ไฟฟ้าอุตสาหกรรม PLC Inverter Sensor" 
           fill 
           priority 
           className="object-cover object-center opacity-40 lg:opacity-60" 
@@ -56,14 +56,16 @@ export default async function Home() {
             <span className="inline-block bg-blue-600 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full mb-4 shadow-md">
               Industrial Electronics &amp; Automation
             </span>
+            {/* SEO Fix: ใช้ h1 ชัดเจนพร้อมแบรนด์และ Keyword หลัก */}
             <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight mb-3 tracking-tight">
-              MaxTech Electric
+              MaxTech Electric <span className="block text-xl sm:text-2xl text-blue-400 font-semibold mt-1">ศูนย์รวมอุปกรณ์ไฟฟ้าอุตสาหกรรม ครบวงจร</span>
             </h1>
             <p className="text-rose-400 text-sm sm:text-lg font-bold mb-4 leading-snug">
-              จำหน่ายอุปกรณ์ไฟฟ้า อิเล็กทรอนิกส์ ออโตเมชั่น มือหนึ่ง มือสอง ทุกชนิด
+              จำหน่ายอุปกรณ์ไฟฟ้า อิเล็กทรอนิกส์ ออโตเมชั่น มือหนึ่ง มือสอง ทุกชนิด อาทิ PLC, Sensor, Inverter และ Breaker
             </p>
             <p className="text-slate-300 text-xs sm:text-sm max-w-xl leading-relaxed mb-6 hidden sm:block">
-              ศูนย์รวมอุปกรณ์ควบคุมโรงงานอุตสาหกรรมประสิทธิภาพสูง สินค้าผ่านการคัดสรรและตรวจสอบมาตรฐาน พร้อมทีมงานวิศวกรให้คำแนะนำด้านเทคนิค
+              ยินดีต้อนรับสู่ www.maxtechelectric.com แหล่งรวมอุปกรณ์ควบคุมโรงงานและระบบอัตโนมัติประสิทธิภาพสูง 
+              ไม่ว่าจะเป็น PLC, Sensor, Inverter, Breaker สินค้าผ่านการคัดสรรและตรวจสอบมาตรฐาน พร้อมทีมงานวิศวกรให้คำแนะนำด้านเทคนิค
             </p>
             <div className="flex flex-wrap justify-center lg:justify-start gap-3">
               <Link href="/products" className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-98">
@@ -140,7 +142,7 @@ export default async function Home() {
             <a href="tel:0946861981" className="block bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 rounded-xl px-3 py-1.5 transition-colors">
               <div className="flex items-center gap-2 text-[11px] font-medium text-amber-300">
                 <span>🔧</span> 
-                <span>ปรึกษาข้อมูลทางเทคนิค: 094-686-1981</span>
+                <span>ปรึกษาข้อมูลเทคนิค อุปกรณ์ไฟฟ้า PLC Inverter: 094-686-1981</span>
               </div>
             </a>
 
@@ -154,7 +156,7 @@ export default async function Home() {
                   { title: "SERVO", color: "from-emerald-500 to-emerald-600" },
                   { title: "MOTOR", color: "from-red-500 to-red-600" },
                   { title: "SENSOR", color: "from-purple-500 to-purple-600" },
-                  { title: "สายลิงค์/โหลด", color: "from-blue-600 to-indigo-600" },
+                  { title: "Breaker", color: "from-blue-600 to-indigo-600" }, // ปรับให้มี Breaker ตามคีย์เวิร์ด
                 ].map((item) => (
                   <div 
                     key={item.title} 
@@ -194,7 +196,7 @@ export default async function Home() {
         {/* สินค้าแนะนำ */}
         {recommendedProducts.length > 0 && (
           <section>
-            <SectionHeader eyebrow="Editor's Pick" title="สินค้าแนะนำ" href="/products" />
+            <SectionHeader eyebrow="Editor's Pick" title="สินค้าแนะนำ - PLC, Sensor, Inverter" href="/products" />
             <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
               {recommendedProducts.map((p) => (
                 <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
@@ -211,7 +213,7 @@ export default async function Home() {
         {/* สินค้าขายดี */}
         {bestSellingProducts.length > 0 ? (
           <section>
-            <SectionHeader eyebrow="Best Value" title="สินค้าขายดี" href="/products" />
+            <SectionHeader eyebrow="Best Value" title="อุปกรณ์ไฟฟ้าอุตสาหกรรม ขายดี" href="/products" />
             <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
               {bestSellingProducts.map((p) => (
                 <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
@@ -230,7 +232,7 @@ export default async function Home() {
         {/* สินค้าล่าสุด */}
         {latestProducts.length > 0 && (
           <section>
-            <SectionHeader eyebrow="New Arrivals" title="สินค้าล่าสุด" href="/products" />
+            <SectionHeader eyebrow="New Arrivals" title="สินค้ามาใหม่ล่าสุด" href="/products" />
             <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
               {latestProducts.map((p) => (
                 <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
@@ -248,7 +250,7 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8 text-center sm:text-left">
             <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1.5">นโยบายของเรา</p>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">ซื้อง่าย มั่นใจทุกขั้นตอน</h2>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">ซื้อง่าย มั่นใจทุกขั้นตอน ที่ MaxTech Electric</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -310,7 +312,7 @@ export default async function Home() {
                 <div className="text-3xl mb-3">💬</div>
                 <h3 className="text-base font-bold text-emerald-900 mb-2">ศูนย์ช่วยเหลือ</h3>
                 <p className="text-xs sm:text-sm text-emerald-800/80 leading-relaxed mb-4">
-                  สอบถามข้อมูลเพิ่มเติมเกี่ยวกับสเปกสินค้า หรือปัญหาการใช้งาน ติดต่อเราได้ตลอดเวลา
+                  สอบถามข้อมูลเพิ่มเติมเกี่ยวกับสเปกสินค้า PLC, Inverter, Sensor หรือปัญหาการใช้งาน ติดต่อเราได้ตลอดเวลา
                 </p>
               </div>
               <a
@@ -337,83 +339,82 @@ export default async function Home() {
       </section>
 
       {/* ─── 5. FOOTER ─── */}
-     {/* ─── 5. FOOTER (Updated with clickable links) ─── */}
-<footer className="bg-slate-950 text-slate-400 py-16 border-t border-slate-900">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-    
-    {/* Col 1: ข้อมูลบริษัท */}
-    <div className="space-y-4">
-      <h3 className="text-white font-black text-lg tracking-tight">MaxTech Electric</h3>
-      <p className="text-xs leading-relaxed text-slate-500">
-        ผู้นำด้านอุปกรณ์อิเล็กทรอนิกส์และออโตเมชันอุตสาหกรรมครบวงจร คัดสรรสินค้าคุณภาพเพื่อประสิทธิภาพสูงสุดในโรงงานของคุณ
-      </p>
-      <div className="flex gap-4">
-        <a 
-          href="https://www.facebook.com/profile.php?id=61591176506538" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:text-blue-500 transition-colors"
-        >
-          Facebook
-        </a>
-        <a 
-          href="https://line.me/ti/p/~@051pdsfe" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="hover:text-green-500 transition-colors"
-        >
-          LINE
-        </a>
-      </div>
-    </div>
+      <footer className="bg-slate-950 text-slate-400 py-16 border-t border-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+          
+          {/* Col 1: ข้อมูลบริษัท */}
+          <div className="space-y-4">
+            <h3 className="text-white font-black text-lg tracking-tight">MaxTech Electric</h3>
+            <p className="text-xs leading-relaxed text-slate-500">
+              ผู้นำด้านอุปกรณ์อิเล็กทรอนิกส์และออโตเมชันอุตสาหกรรมครบวงจร คัดสรรสินค้าคุณภาพ เช่น PLC, Sensor, Inverter และ Breaker เพื่อประสิทธิภาพสูงสุดในโรงงานของคุณ
+            </p>
+            <div className="flex gap-4">
+              <a 
+                href="https://www.facebook.com/profile.php?id=61591176506538" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-blue-500 transition-colors"
+              >
+                Facebook
+              </a>
+              <a 
+                href="https://line.me/ti/p/~@051pdsfe" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-green-500 transition-colors"
+              >
+                LINE
+              </a>
+            </div>
+          </div>
 
-    {/* Col 2: ลิงก์ด่วน */}
-    <div>
-      <h4 className="text-white font-bold text-sm mb-4">บริการและช่วยเหลือ</h4>
-      <ul className="space-y-2.5 text-xs">
-        <li><Link href="/products" className="hover:text-white transition-colors">สินค้าทั้งหมด</Link></li>
-        <li><Link href="/contact" className="hover:text-white transition-colors">แจ้งปัญหาการใช้งาน</Link></li>
-        <li><Link href="/about" className="hover:text-white transition-colors">เกี่ยวกับเรา</Link></li>
-        <li><Link href="/contact" className="hover:text-white transition-colors">ติดต่อเรา</Link></li>
-      </ul>
-    </div>
+          {/* Col 2: ลิงก์ด่วน */}
+          <div>
+            <h4 className="text-white font-bold text-sm mb-4">บริการและช่วยเหลือ</h4>
+            <ul className="space-y-2.5 text-xs">
+              <li><Link href="/products" className="hover:text-white transition-colors">สินค้าทั้งหมด</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors">แจ้งปัญหาการใช้งาน</Link></li>
+              <li><Link href="/about" className="hover:text-white transition-colors">เกี่ยวกับเรา</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors">ติดต่อเรา</Link></li>
+            </ul>
+          </div>
 
-    {/* Col 3: ติดต่อเรา */}
-    <div>
-      <h4 className="text-white font-bold text-sm mb-4">ติดต่อเรา</h4>
-      <ul className="space-y-3 text-xs text-slate-400">
-        <li className="flex items-center gap-2">
-          <span>📞</span> <a href="tel:0946861981" className="hover:text-white transition-colors">094-686-1981</a>
-        </li>
-        <li className="flex items-center gap-2">
-          <span>✉️</span> <a href="mailto:maxtechelectric1@gmail.com" className="hover:text-white transition-colors">maxtechelectric1@gmail.com</a>
-        </li>
-        <li className="flex items-center gap-2">
-          <span>📍</span> สมุทรปราการ, ประเทศไทย
-        </li>
-      </ul>
-    </div>
+          {/* Col 3: ติดต่อเรา */}
+          <div>
+            <h4 className="text-white font-bold text-sm mb-4">ติดต่อเรา</h4>
+            <ul className="space-y-3 text-xs text-slate-400">
+              <li className="flex items-center gap-2">
+                <span>📞</span> <a href="tel:0946861981" className="hover:text-white transition-colors">094-686-1981</a>
+              </li>
+              <li className="flex items-center gap-2">
+                <span>✉️</span> <a href="mailto:maxtechelectric1@gmail.com" className="hover:text-white transition-colors">maxtechelectric1@gmail.com</a>
+              </li>
+              <li className="flex items-center gap-2">
+                <span>📍</span> สมุทรปราการ, ประเทศไทย
+              </li>
+            </ul>
+          </div>
 
-    {/* Col 4: เวลาทำการ */}
-    <div>
-      <h4 className="text-white font-bold text-sm mb-4">เวลาทำการ</h4>
-      <p className="text-xs text-slate-500">
-        จันทร์ - ศุกร์: 08:30 - 17:30 น.<br />
-        เสาร์: 09:00 - 12:00 น.<br />
-        <span className="text-rose-500 italic mt-2 block">*หยุดวันอาทิตย์และวันหยุดนักขัตฤกษ์</span>
-      </p>
-    </div>
-  </div>
+          {/* Col 4: เวลาทำการ */}
+          <div>
+            <h4 className="text-white font-bold text-sm mb-4">เวลาทำการ</h4>
+            <p className="text-xs text-slate-500">
+              จันทร์ - ศุกร์: 08:30 - 17:30 น.<br />
+              เสาร์: 09:00 - 12:00 น.<br />
+              <span className="text-rose-500 italic mt-2 block">*หยุดวันอาทิตย์และวันหยุดนักขัตฤกษ์</span>
+            </p>
+          </div>
+        </div>
 
-  {/* Bottom Bar */}
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-slate-600">
-    <p>© {new Date().getFullYear()} MaxTech Electric. All rights reserved.</p>
-    <div className="flex gap-6">
-      <Link href="/privacy" className="hover:text-slate-400">นโยบายความเป็นส่วนตัว</Link>
-      <Link href="/terms" className="hover:text-slate-400">เงื่อนไขการใช้บริการ</Link>
-    </div>
-  </div>
-</footer>
+        {/* Bottom Bar */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-slate-600">
+          <p>© {new Date().getFullYear()} MaxTech Electric (www.maxtechelectric.com). All rights reserved.</p>
+          <div className="flex gap-6">
+            <Link href="/privacy" className="hover:text-slate-400">นโยบายความเป็นส่วนตัว</Link>
+            <Link href="/terms" className="hover:text-slate-400">เงื่อนไขการใช้บริการ</Link>
+          </div>
+        </div>
+      </footer>
 
     </main>
   );
