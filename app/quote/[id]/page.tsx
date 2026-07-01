@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import QuoteForm from "@/components/QuoteStatus"; // ตรวจสอบให้แน่ใจว่าได้สร้าง Component นี้ไว้แล้ว
+import QuoteForm from "@/components/QuoteForm";
 
 export default async function QuoteRequestPage({
   params,
