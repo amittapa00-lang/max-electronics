@@ -4,32 +4,39 @@ import Image from "next/image";
 
 export default async function Home() {
   // ดึงข้อมูลจริงโดยอิงจากความสัมพันธ์ใน schema.prisma
+  const twentyDaysAgo = new Date();
+  twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 20);
+
   const [latestProducts, bestSellingProducts, recommendedProducts] = await Promise.all([
-    // 1. สินค้าล่าสุด: เรียงตามเวลาที่เพิ่มจริง
+    // 1. สินค้าล่าสุด: เฉพาะสินค้าที่เพิ่มภายใน 20 วันล่าสุด
     prisma.product.findMany({
       take: 8,
+      where: { createdAt: { gte: twentyDaysAgo } },
       orderBy: { createdAt: "desc" },
       include: { category: true, images: true },
     }),
-    
-    // 2. สินค้าขายดี: นับจำนวนแถวที่ถูกสั่งซื้อใน OrderItem จากมากไปน้อย
+
+    // 2. สินค้าขายดี: ใช้ field sold (จำนวนที่ขายได้จริง) เรียงจากมากไปน้อย
+    // นับรวมทั้งสินค้าที่มีสต็อกปกติ และสินค้าประเภทใบเสนอราคา (quotationOnly)
     prisma.product.findMany({
       take: 8,
       where: {
-        stock: { gt: 0 },
-        orderItems: { some: {} }
+        sold: { gt: 0 },
+        OR: [{ quotationOnly: true }, { stock: { gt: 0 } }],
       },
-      orderBy: {
-        orderItems: { _count: "desc" },
-      },
+      orderBy: { sold: "desc" },
       include: { category: true, images: true },
     }),
 
-    // 3. สินค้าแนะนำ: คัดจากกลุ่มสินค้าพรีเมียมราคาดีของร้าน
+    // 3. สินค้าแนะนำ: คัดจากสินค้าที่ตั้งค่า isRecommended = true
+    // รวมทั้งสินค้าที่มีราคาปกติ และสินค้าประเภทใบเสนอราคา (quotationOnly)
     prisma.product.findMany({
       take: 8,
-      where: { stock: { gt: 0 } },
-      orderBy: { price: "desc" }, 
+      where: {
+        isRecommended: true,
+        OR: [{ quotationOnly: true }, { stock: { gt: 0 } }],
+      },
+      orderBy: { updatedAt: "desc" },
       include: { category: true, images: true },
     }),
   ]);
@@ -236,7 +243,10 @@ export default async function Home() {
             <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
               {latestProducts.map((p) => (
                 <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
-                  <ProductCard product={p} />
+                  <ProductCard 
+                    product={p} 
+                    badge={{ label: "มาใหม่", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" }} 
+                  />
                 </div>
               ))}
             </div>
@@ -427,6 +437,7 @@ type ProductWithRelations = {
   slug: string;
   price: number;
   stock: number;
+  quotationOnly: boolean;
   category: { name: string } | null;
   images: { imageUrl: string }[];
 };
@@ -484,20 +495,28 @@ function ProductCard({
           </h3>
         </div>
 
-        <div className="flex justify-between items-center border-t border-slate-50 pt-2.5 mt-auto">
-          <p className="text-sm sm:text-base font-black text-slate-900">
-            <span className="text-[10px] font-medium mr-0.5">฿</span>
-            {product.price.toLocaleString()}
-          </p>
-          
-          <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
-            product.stock > 0 
-              ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
-              : "bg-rose-50 text-rose-600 border-rose-100"
-          }`}>
-            {product.stock > 0 ? `คลัง: ${product.stock}` : "หมด"}
-          </span>
-        </div>
+        {product.quotationOnly ? (
+          <div className="flex justify-between items-center border-t border-slate-50 pt-2.5 mt-auto">
+            <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg">
+              📋 ขอใบเสนอราคา
+            </span>
+          </div>
+        ) : (
+          <div className="flex justify-between items-center border-t border-slate-50 pt-2.5 mt-auto">
+            <p className="text-sm sm:text-base font-black text-slate-900">
+              <span className="text-[10px] font-medium mr-0.5">฿</span>
+              {product.price.toLocaleString()}
+            </p>
+
+            <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
+              product.stock > 0 
+                ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+                : "bg-rose-50 text-rose-600 border-rose-100"
+            }`}>
+              {product.stock > 0 ? `คลัง: ${product.stock}` : "หมด"}
+            </span>
+          </div>
+        )}
       </div>
     </Link>
   );
