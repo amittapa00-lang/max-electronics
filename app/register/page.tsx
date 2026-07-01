@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
 import { FcGoogle } from "react-icons/fc";
-import { FaPhoneAlt } from "react-icons/fa";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -96,14 +95,18 @@ export default function RegisterPage() {
           <p className="text-slate-400 mt-1 text-xs font-medium">MaxTech Electric Automation</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
-
+        <div className="flex justify-center mb-6">
  <button
   type="button"
   onClick={() => signIn("google")}
   className="
-    flex items-center justify-center gap-3
-    border border-slate-200
+    w-full
+    flex
+    items-center
+    justify-center
+    gap-3
+    border
+    border-slate-200
     rounded-xl
     py-3
     bg-white
@@ -112,34 +115,8 @@ export default function RegisterPage() {
   "
 >
   <FcGoogle size={22} />
-
   <span className="font-medium">
-    Google
-  </span>
-</button>
-
-<button
-  type="button"
-  onClick={() =>
-    alert("ระบบสมัครสมาชิกด้วยเบอร์โทรกำลังพัฒนา")
-  }
-  className="
-    flex items-center justify-center gap-3
-    border border-slate-200
-    rounded-xl
-    py-3
-    bg-white
-    hover:bg-slate-50
-    transition
-  "
->
-  <FaPhoneAlt
-    size={16}
-    className="text-green-600"
-  />
-
-  <span className="font-medium">
-    เบอร์โทรศัพท์
+    สมัครสมาชิกด้วย Google
   </span>
 </button>
 

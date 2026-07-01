@@ -21,12 +21,11 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
 
-        const user =
-          await prisma.user.findUnique({
-            where: {
-              email: credentials.email,
-            },
-          });
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email,
+          },
+        });
 
         if (!user) return null;
 
@@ -38,9 +37,7 @@ export const authOptions: NextAuthOptions = {
         if (!valid) return null;
 
         if (!user.emailVerified) {
-          throw new Error(
-            "กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ"
-          );
+          throw new Error("กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ");
         }
 
         return {
@@ -53,49 +50,69 @@ export const authOptions: NextAuthOptions = {
     }),
 
     GoogleProvider({
-      clientId:
-        process.env.GOOGLE_CLIENT_ID!,
-      clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
 
   callbacks: {
-    async jwt({
-      token,
-      user,
-    }) {
-      if (user) {
-        token.role =
-          (user as {
-            role?: string;
-          }).role;
+  async signIn({ user, account }) {
+    if (account?.provider === "google") {
+      let existingUser = await prisma.user.findUnique({
+        where: {
+          email: user.email!,
+        },
+      });
+
+      if (!existingUser) {
+        existingUser = await prisma.user.create({
+          data: {
+            name: user.name || "",
+            email: user.email!,
+            image: user.image,
+            provider: "google",
+            emailVerified: true,
+          },
+        });
       }
 
-      return token;
-    },
+      user.id = String(existingUser.id);
+      user.role = existingUser.role;
+    }
 
-    async session({
-      session,
-      token,
-    }) {
-      if (session.user) {
-        (
-          session.user as {
-            role?: string;
-          }
-        ).role =
-          token.role as string;
-      }
-
-      return session;
-    },
+    return true;
   },
+
+  async jwt({ token, user }) {
+    if (user?.email) {
+      const dbUser = await prisma.user.findUnique({
+        where: {
+          email: user.email,
+        },
+      });
+
+      if (dbUser) {
+        token.id = dbUser.id;
+        token.role = dbUser.role;
+      }
+    }
+
+    return token;
+  },
+
+  async session({ session, token }) {
+    if (session.user) {
+      session.user.id = token.id;
+      session.user.role = token.role;
+    }
+
+    return session;
+  },
+},
 
   pages: {
     signIn: "/login",
   },
 
-  secret:
-    process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET,
 };

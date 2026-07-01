@@ -4,7 +4,6 @@ import { signIn, getSession } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FcGoogle } from "react-icons/fc";
-import { FaPhoneAlt } from "react-icons/fa";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -66,10 +65,6 @@ export default function LoginPage() {
           <button type="button" onClick={() => signIn("google")} className="flex items-center justify-center gap-3 border border-slate-200 rounded-xl py-3 bg-white hover:bg-slate-50 transition">
             <FcGoogle size={22} />
             <span className="font-medium">Google</span>
-          </button>
-          <button type="button" onClick={() => alert("ระบบเข้าสู่ระบบด้วยเบอร์โทรกำลังพัฒนา")} className="flex items-center justify-center gap-3 border border-slate-200 rounded-xl py-3 bg-white hover:bg-slate-50 transition">
-            <FaPhoneAlt size={16} className="text-green-600" />
-            <span className="font-medium">เบอร์โทร</span>
           </button>
         </div>
 
