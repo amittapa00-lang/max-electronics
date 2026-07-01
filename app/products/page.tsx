@@ -516,6 +516,11 @@ export default async function ProductsPage({
               ) : (
                 products.map((product) => {
                   const displayPrice = Number(product.price || 0);
+                  // ป้องกัน crash ถ้าสินค้าไม่มีหมวดหมู่ (category = null ใน DB)
+                  const categoryLabel = product.category?.parent
+                    ? `${product.category.parent.name} › ${product.category.name}`
+                    : product.category?.name ?? "ไม่ระบุหมวดหมู่";
+
                   return (
                     <Link
                       key={product.id}
@@ -540,9 +545,7 @@ export default async function ProductsPage({
 
                       <div className="pg-card-body">
                         <div className="pg-card-cat">
-                          {product.category.parent
-                            ? `${product.category.parent.name} › ${product.category.name}`
-                            : product.category.name}
+                          {categoryLabel}
                         </div>
 
                         <p className="pg-card-name">{product.name}</p>
@@ -550,22 +553,16 @@ export default async function ProductsPage({
                         <div className="pg-card-code">{product.productCode}</div>
 
                         <div className="pg-card-footer">
-                         {
-  product.quotationOnly ? (
-
-    <div className="pg-price text-blue-600">
-      📄 ขอใบเสนอราคา
-    </div>
-
-  ) : (
-
-    <div className="pg-price">
-      <span className="pg-price-thb">฿</span>
-      {displayPrice.toLocaleString()}
-    </div>
-
-  )
-}
+                          {product.quotationOnly ? (
+                            <div className="pg-price text-blue-600">
+                              📄 ขอใบเสนอราคา
+                            </div>
+                          ) : (
+                            <div className="pg-price">
+                              <span className="pg-price-thb">฿</span>
+                              {displayPrice.toLocaleString()}
+                            </div>
+                          )}
                           {product.stock > 0 && (
                             <span className="pg-stock-ok">
                               เหลือ {product.stock} ชิ้น
