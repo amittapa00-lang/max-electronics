@@ -4,15 +4,16 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const {
-      name,
-      productCode,
-      slug,
-      description,
-      price,
-      stock,
-      categoryId,
-      images,
-    } = await req.json();
+  name,
+  productCode,
+  slug,
+  description,
+  price,
+  quotationOnly,
+  stock,
+  categoryId,
+  images,
+} = await req.json();
 
     const existingProduct =
       await prisma.product.findUnique({
@@ -50,37 +51,41 @@ export async function POST(req: Request) {
       );
     }
 
-    const product =
-      await prisma.product.create({
-        data: {
-          name,
-          slug,
-          description,
-          price: Number(price),
-          stock: Number(stock),
+   const product =
+  await prisma.product.create({
+   data: {
+  name,
+  slug,
+  description,
 
-          productCode:
-            productCode || null,
+  price: quotationOnly ? 0 : Number(price),
 
-          categoryId:
-            Number(categoryId),
+  quotationOnly,
 
-          images: {
-            create: (
-              images || []
-            ).map(
-              (url: string) => ({
-                imageUrl: url,
-              })
-            ),
-          },
-        },
+  stock: Number(stock),
 
-        include: {
-          images: true,
-          category: true,
-        },
-      });
+      productCode:
+        productCode || null,
+
+      categoryId:
+        Number(categoryId),
+
+      images: {
+        create: (
+          images || []
+        ).map(
+          (url: string) => ({
+            imageUrl: url,
+          })
+        ),
+      },
+    },
+
+    include: {
+      images: true,
+      category: true,
+    },
+  });
 
     return NextResponse.json(
       product

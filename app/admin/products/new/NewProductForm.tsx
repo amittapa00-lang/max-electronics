@@ -25,6 +25,7 @@ export default function NewProductForm({
   const [productCode, setProductCode] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [quotationOnly, setQuotationOnly] = useState(false);
   const [stock, setStock] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [images, setImages] = useState<File[]>([]);
@@ -83,15 +84,19 @@ export default function NewProductForm({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
-          productCode,
-          slug: generateSlug(name),
-          description,
-          price: Number(price), 
-          stock: Number(stock), 
-          categoryId: Number(categoryId),
-          images: imageUrls,
-        }),
+  name,
+  productCode,
+  slug: generateSlug(name),
+  description,
+
+  price: quotationOnly ? 0 : Number(price),
+
+  quotationOnly,
+
+  stock: Number(stock),
+  categoryId: Number(categoryId),
+  images: imageUrls,
+})
       });
 
       const data = await res.json();
@@ -167,16 +172,37 @@ export default function NewProductForm({
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700">ราคาสินค้า (฿) <span className="text-red-500">*</span></label>
             <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-blue-500 focus:ring-3 focus:ring-blue-100 outline-none transition-all text-sm sm:text-base"
-              required
-            />
+  type="number"
+  min="0"
+  step="0.01"
+  disabled={quotationOnly}
+  required={!quotationOnly}
+  placeholder={
+    quotationOnly
+      ? "สินค้านี้ใช้ใบเสนอราคา"
+      : "0.00"
+  }
+  value={price}
+  onChange={(e) => setPrice(e.target.value)}
+  className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-blue-500 focus:ring-3 focus:ring-blue-100 outline-none transition-all text-sm sm:text-base"
+/>
           </div>
+          <div className="flex items-center gap-3 mt-3">
+  <input
+    id="quotationOnly"
+    type="checkbox"
+    checked={quotationOnly}
+    onChange={(e) => setQuotationOnly(e.target.checked)}
+    className="w-5 h-5"
+  />
+
+  <label
+    htmlFor="quotationOnly"
+    className="text-sm font-semibold text-red-600"
+  >
+    📄 สินค้านี้ต้องขอใบเสนอราคา
+  </label>
+</div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700">จำนวนในสต็อก (ชิ้น) <span className="text-red-500">*</span></label>

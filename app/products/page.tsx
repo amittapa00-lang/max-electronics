@@ -550,10 +550,22 @@ export default async function ProductsPage({
                         <div className="pg-card-code">{product.productCode}</div>
 
                         <div className="pg-card-footer">
-                          <div className="pg-price">
-                            <span className="pg-price-thb">฿</span>
-                            {displayPrice.toLocaleString()}
-                          </div>
+                         {
+  product.quotationOnly ? (
+
+    <div className="pg-price text-blue-600">
+      📄 ขอใบเสนอราคา
+    </div>
+
+  ) : (
+
+    <div className="pg-price">
+      <span className="pg-price-thb">฿</span>
+      {displayPrice.toLocaleString()}
+    </div>
+
+  )
+}
                           {product.stock > 0 && (
                             <span className="pg-stock-ok">
                               เหลือ {product.stock} ชิ้น

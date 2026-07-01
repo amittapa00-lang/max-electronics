@@ -64,6 +64,22 @@ return ( <header className="sticky top-0 z-50 bg-white border-b shadow-sm"> <div
         📂 หมวดหมู่
       </Link>
 
+      <Link
+        href="/admin/quotes"
+        className="
+          bg-purple-100
+          hover:bg-purple-200
+          text-slate-800
+          px-4
+          py-2
+          rounded-lg
+          font-medium
+          transition
+        "
+      >
+        ใบเสนอราคาทั้งหมด
+      </Link>
+
       <button
         onClick={() =>
           signOut({
