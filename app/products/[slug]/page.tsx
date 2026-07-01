@@ -18,6 +18,9 @@ export default async function ProductDetailPage({
 
   if (!product) notFound();
 
+  // ป้องกัน crash ถ้าสินค้าไม่มีหมวดหมู่ (category = null ใน DB)
+  const categoryName = product.category?.name ?? "ไม่ระบุหมวดหมู่";
+
   return (
     <>
       <style>{`
@@ -286,8 +289,12 @@ export default async function ProductDetailPage({
           <Link href="/">หน้าหลัก</Link>
           <span className="pdp-breadcrumb-sep">›</span>
           <Link href="/products">สินค้าทั้งหมด</Link>
-          <span className="pdp-breadcrumb-sep">›</span>
-          <Link href={`/category/${product.category.name}`}>{product.category.name}</Link>
+          {product.category && (
+            <>
+              <span className="pdp-breadcrumb-sep">›</span>
+              <Link href={`/category/${product.category.name}`}>{product.category.name}</Link>
+            </>
+          )}
           <span className="pdp-breadcrumb-sep">›</span>
           <span className="pdp-breadcrumb-current">{product.name}</span>
         </nav>
@@ -302,7 +309,7 @@ export default async function ProductDetailPage({
 
           {/* Right — Info */}
           <div className="pdp-info">
-            <span className="pdp-category">{product.category.name}</span>
+            <span className="pdp-category">{categoryName}</span>
 
             <h1 className="pdp-name">{product.name}</h1>
 
@@ -313,23 +320,23 @@ export default async function ProductDetailPage({
             <p className="pdp-description">{product.description}</p>
 
             {/* Price */}
-{product.quotationOnly ? (
-  <div className="pdp-price-block">
-    <span
-      className="pdp-price-value"
-      style={{ color: "#2563EB", fontSize: "30px" }}
-    >
-      📄 ขอใบเสนอราคา
-    </span>
-  </div>
-) : (
-  <div className="pdp-price-block">
-    <span className="pdp-price-currency">฿</span>
-    <span className="pdp-price-value">
-      {product.price.toLocaleString()}
-    </span>
-  </div>
-)}
+            {product.quotationOnly ? (
+              <div className="pdp-price-block">
+                <span
+                  className="pdp-price-value"
+                  style={{ color: "#2563EB", fontSize: "30px" }}
+                >
+                  📄 ขอใบเสนอราคา
+                </span>
+              </div>
+            ) : (
+              <div className="pdp-price-block">
+                <span className="pdp-price-currency">฿</span>
+                <span className="pdp-price-value">
+                  {product.price.toLocaleString()}
+                </span>
+              </div>
+            )}
 
             {/* Stock */}
             {product.stock > 0 ? (
@@ -345,65 +352,62 @@ export default async function ProductDetailPage({
             )}
 
             {/* CTA */}
-            {/* CTA */}
-<div className="pdp-cta">
+            <div className="pdp-cta">
 
-  {product.quotationOnly ? (
+              {product.quotationOnly ? (
 
-    <Link href={`/quote/${product.id}`}>
-      <button
-        className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition"
-      >
-        📄 ขอใบเสนอราคา
-      </button>
-    </Link>
+                <Link href={`/quote/${product.id}`} className="pdp-atc-wrapper">
+                  <button className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition">
+                    📄 ขอใบเสนอราคา
+                  </button>
+                </Link>
 
-  ) : product.stock > 0 ? (
+              ) : product.stock > 0 ? (
 
-    <>
-      <div className="pdp-atc-wrapper">
-        <AddToCartButton productId={product.id} />
-      </div>
+                <>
+                  <div className="pdp-atc-wrapper">
+                    <AddToCartButton productId={product.id} />
+                  </div>
 
-      <p className="pdp-shipping-note">
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="1" y="3" width="15" height="13" rx="1"/>
-          <path d="M16 8h4l3 5v3h-7V8z"/>
-          <circle cx="5.5" cy="18.5" r="2.5"/>
-          <circle cx="18.5" cy="18.5" r="2.5"/>
-        </svg>
+                  <p className="pdp-shipping-note">
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="1" y="3" width="15" height="13" rx="1"/>
+                      <path d="M16 8h4l3 5v3h-7V8z"/>
+                      <circle cx="5.5" cy="18.5" r="2.5"/>
+                      <circle cx="18.5" cy="18.5" r="2.5"/>
+                    </svg>
 
-        จัดส่งภายใน 1–3 วันทำการ
-      </p>
-    </>
+                    จัดส่งภายใน 1–3 วันทำการ
+                  </p>
+                </>
 
-  ) : (
+              ) : (
 
-    <button
-      disabled
-      className="pdp-btn-soldout"
-    >
-      สินค้าหมดชั่วคราว
-    </button>
+                <button
+                  disabled
+                  className="pdp-btn-soldout"
+                >
+                  สินค้าหมดชั่วคราว
+                </button>
 
-  )}
+              )}
 
-</div>
+            </div>
 
             {/* Meta */}
             <div className="pdp-meta-row">
               <div className="pdp-meta-item">
                 <span className="pdp-meta-label">หมวดหมู่</span>
-                <span className="pdp-meta-value">{product.category.name}</span>
+                <span className="pdp-meta-value">{categoryName}</span>
               </div>
               <div className="pdp-meta-item">
                 <span className="pdp-meta-label">รหัสสินค้า</span>
