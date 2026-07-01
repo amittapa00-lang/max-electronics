@@ -55,60 +55,66 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  callbacks: {
-  async signIn({ user, account }) {
-    if (account?.provider === "google") {
-      let existingUser = await prisma.user.findUnique({
-        where: {
-          email: user.email!,
-        },
-      });
-
-      if (!existingUser) {
-        existingUser = await prisma.user.create({
-          data: {
-            name: user.name || "",
-            email: user.email!,
-            image: user.image,
-            provider: "google",
-            emailVerified: true,
-          },
+ callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        let existingUser = await prisma.user.findUnique({
+          where: { email: user.email! },
         });
+
+        if (!existingUser) {
+          existingUser = await prisma.user.create({
+            data: {
+              name: user.name || "",
+              email: user.email!,
+              image: user.image,
+              provider: "google",
+              emailVerified: true,
+            },
+          });
+        }
+
+        user.id = String(existingUser.id);
+        user.role = existingUser.role;
       }
 
-      user.id = String(existingUser.id);
-      user.role = existingUser.role;
-    }
+      return true;
+    },
 
-    return true;
-  },
+    async jwt({ token, user }) {
+      if (user?.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
 
-  async jwt({ token, user }) {
-    if (user?.email) {
-      const dbUser = await prisma.user.findUnique({
-        where: {
-          email: user.email,
-        },
-      });
-
-      if (dbUser) {
-        token.id = dbUser.id;
-        token.role = dbUser.role;
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
       }
-    }
 
-    return token;
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id;
+        session.user.role = token.role;
+      }
+
+      return session;
+    },
+
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+
+      if (new URL(url).origin === baseUrl) {
+        return url;
+      }
+
+      return baseUrl;
+    },
   },
-
-  async session({ session, token }) {
-    if (session.user) {
-      session.user.id = token.id;
-      session.user.role = token.role;
-    }
-
-    return session;
-  },
-},
 
   pages: {
     signIn: "/login",

@@ -98,7 +98,7 @@ export default function RegisterPage() {
         <div className="flex justify-center mb-6">
  <button
   type="button"
-  onClick={() => signIn("google")}
+  onClick={() => signIn("google", { callbackUrl: "/" })}
   className="
     w-full
     flex

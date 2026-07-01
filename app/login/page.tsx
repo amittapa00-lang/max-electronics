@@ -62,10 +62,14 @@ export default function LoginPage() {
 
         {/* Social Login */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <button type="button" onClick={() => signIn("google")} className="flex items-center justify-center gap-3 border border-slate-200 rounded-xl py-3 bg-white hover:bg-slate-50 transition">
-            <FcGoogle size={22} />
-            <span className="font-medium">Google</span>
-          </button>
+          <button
+  type="button"
+  onClick={() => signIn("google", { callbackUrl: "/" })}
+  className="flex items-center justify-center gap-3 border border-slate-200 rounded-xl py-3 bg-white hover:bg-slate-50 transition"
+>
+  <FcGoogle size={22} />
+  <span className="font-medium">Google</span>
+</button>
         </div>
 
         <div className="relative my-6">
