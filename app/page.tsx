@@ -46,18 +46,18 @@ export default async function Home() {
 
       {/* ─── 1. HERO SECTION (Optimized for SEO) ─── */}
       <section className="relative w-full min-h-125 lg:min-h-137.5 overflow-hidden flex items-center bg-slate-950 py-10 lg:py-0">
-        <Image 
-          src="/banner_.png" 
-          alt="MaxTech Electric - แหล่งรวมอุปกรณ์ไฟฟ้าอุตสาหกรรม PLC Inverter Sensor" 
-          fill 
-          priority 
-          className="object-cover object-center opacity-40 lg:opacity-60" 
-          sizes="100vw" 
+        <Image
+          src="/banner_.png"
+          alt="MaxTech Electric - แหล่งรวมอุปกรณ์ไฟฟ้าอุตสาหกรรม PLC Inverter Sensor"
+          fill
+          priority
+          className="object-cover object-center opacity-40 lg:opacity-60"
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-linear-to-r from-slate-950/95 via-slate-950/80 to-slate-950/40 lg:to-transparent" />
-        
+
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          
+
           {/* โซนซ้าย: สโลแกนหลักและปุ่มแอคชัน */}
           <div className="lg:col-span-7 text-center lg:text-left">
             <span className="inline-block bg-blue-600 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full mb-4 shadow-md">
@@ -71,15 +71,15 @@ export default async function Home() {
               จำหน่ายอุปกรณ์ไฟฟ้า อิเล็กทรอนิกส์ ออโตเมชั่น มือหนึ่ง มือสอง ทุกชนิด อาทิ PLC, Sensor, Inverter และ Breaker
             </p>
             <p className="text-slate-300 text-xs sm:text-sm max-w-xl leading-relaxed mb-6 hidden sm:block">
-              ยินดีต้อนรับสู่ www.maxtechelectric.com แหล่งรวมอุปกรณ์ควบคุมโรงงานและระบบอัตโนมัติประสิทธิภาพสูง 
+              ยินดีต้อนรับสู่ www.maxtechelectric.com แหล่งรวมอุปกรณ์ควบคุมโรงงานและระบบอัตโนมัติประสิทธิภาพสูง
               ไม่ว่าจะเป็น PLC, Sensor, Inverter, Breaker สินค้าผ่านการคัดสรรและตรวจสอบมาตรฐาน พร้อมทีมงานวิศวกรให้คำแนะนำด้านเทคนิค
             </p>
             <div className="flex flex-wrap justify-center lg:justify-start gap-3">
               <Link href="/products" className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-98">
                 ดูสินค้าทั้งหมด
               </Link>
-              <Link 
-                href="/contact" 
+              <Link
+                href="/contact"
                 className="bg-white/10 hover:bg-white/15 text-white border border-white/20 text-xs sm:text-sm font-medium px-6 py-2.5 rounded-xl backdrop-blur-xs transition-all inline-flex items-center gap-2"
               >
                 ติดต่อเรา
@@ -89,7 +89,7 @@ export default async function Home() {
 
           {/* โซนขวา: กล่องข้อมูลติดต่อด่วน + ป้ายหมวดหมู่สินค้า */}
           <div className="lg:col-span-5 bg-slate-900/75 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/10 shadow-2xl space-y-4">
-            
+
             {/* รายละเอียดช่องทางติดต่อ */}
             <div className="flex gap-4 items-center bg-white/5 rounded-xl p-3 border border-white/5">
               {/* LINE QR Code */}
@@ -99,17 +99,17 @@ export default async function Home() {
                 </div>
                 <span className="bg-[#22c55e] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full mt-1">LINE ID</span>
               </div>
-              
+
               {/* ข้อมูลการติดต่อทั้งหมดแบบคลิกได้จริง */}
               <div className="text-white text-xs space-y-2.5 w-full overflow-hidden">
                 <p className="font-bold text-blue-400 text-[10px] tracking-wider uppercase pl-0.5">Contact Center</p>
-                
+
                 {/* 1. เบอร์โทร */}
                 <a href="tel:0946861981" className="flex items-center gap-2 hover:text-blue-400 transition-colors group">
-                  <span className="text-slate-400 text-sm w-4 text-center group-hover:scale-110 transition-transform">📞</span> 
+                  <span className="text-slate-400 text-sm w-4 text-center group-hover:scale-110 transition-transform">📞</span>
                   <span className="font-medium text-slate-200 group-hover:text-blue-400 truncate">094-686-1981</span>
                 </a>
-                
+
                 {/* 2. LINE */}
                 <a href="https://line.me/R/ti/p/@051pqsfe" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[#22c55e] transition-colors group">
                   <div className="w-4 h-4 shrink-0 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -119,7 +119,7 @@ export default async function Home() {
                   </div>
                   <span className="font-medium text-slate-200 group-hover:text-[#22c55e]">@051pqsfe</span>
                 </a>
-                
+
                 {/* 3. Facebook */}
                 <a
                   href="https://www.facebook.com/profile.php?id=61591176506538"
@@ -148,7 +148,7 @@ export default async function Home() {
             {/* เบอร์โทรศัพท์ฝ่ายเทคนิคเฉพาะทาง */}
             <a href="tel:0946861981" className="block bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 rounded-xl px-3 py-1.5 transition-colors">
               <div className="flex items-center gap-2 text-[11px] font-medium text-amber-300">
-                <span>🔧</span> 
+                <span>🔧</span>
                 <span>ปรึกษาข้อมูลเทคนิค อุปกรณ์ไฟฟ้า PLC Inverter: 094-686-1981</span>
               </div>
             </a>
@@ -165,8 +165,8 @@ export default async function Home() {
                   { title: "SENSOR", color: "from-purple-500 to-purple-600" },
                   { title: "Breaker", color: "from-blue-600 to-indigo-600" }, // ปรับให้มี Breaker ตามคีย์เวิร์ด
                 ].map((item) => (
-                  <div 
-                    key={item.title} 
+                  <div
+                    key={item.title}
                     className={`bg-linear-to-r ${item.color} text-white font-black text-center text-[10px] sm:text-xs py-2 rounded-lg shadow-xs border-b-2 border-black/20 select-none`}
                   >
                     {item.title}
@@ -199,7 +199,7 @@ export default async function Home() {
 
       {/* ─── 3. โซนสินค้าสไลด์แนวนอน ─── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-        
+
         {/* สินค้าแนะนำ */}
         {recommendedProducts.length > 0 && (
           <section>
@@ -207,9 +207,9 @@ export default async function Home() {
             <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
               {recommendedProducts.map((p) => (
                 <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
-                  <ProductCard 
-                    product={p} 
-                    badge={{ label: "แนะนำ", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" }} 
+                  <ProductCard
+                    product={p}
+                    badge={{ label: "แนะนำ", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" }}
                   />
                 </div>
               ))}
@@ -224,9 +224,9 @@ export default async function Home() {
             <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
               {bestSellingProducts.map((p) => (
                 <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
-                  <ProductCard 
-                    product={p} 
-                    badge={{ label: "ขายดี", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" }} 
+                  <ProductCard
+                    product={p}
+                    badge={{ label: "ขายดี", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" }}
                   />
                 </div>
               ))}
@@ -243,9 +243,9 @@ export default async function Home() {
             <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
               {latestProducts.map((p) => (
                 <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
-                  <ProductCard 
-                    product={p} 
-                    badge={{ label: "มาใหม่", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" }} 
+                  <ProductCard
+                    product={p}
+                    badge={{ label: "มาใหม่", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" }}
                   />
                 </div>
               ))}
@@ -351,7 +351,7 @@ export default async function Home() {
       {/* ─── 5. FOOTER ─── */}
       <footer className="bg-slate-950 text-slate-400 py-16 border-t border-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          
+
           {/* Col 1: ข้อมูลบริษัท */}
           <div className="space-y-4">
             <h3 className="text-white font-black text-lg tracking-tight">MaxTech Electric</h3>
@@ -359,17 +359,17 @@ export default async function Home() {
               ผู้นำด้านอุปกรณ์อิเล็กทรอนิกส์และออโตเมชันอุตสาหกรรมครบวงจร คัดสรรสินค้าคุณภาพ เช่น PLC, Sensor, Inverter และ Breaker เพื่อประสิทธิภาพสูงสุดในโรงงานของคุณ
             </p>
             <div className="flex gap-4">
-              <a 
-                href="https://www.facebook.com/profile.php?id=61591176506538" 
-                target="_blank" 
+              <a
+                href="https://www.facebook.com/profile.php?id=61591176506538"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-blue-500 transition-colors"
               >
                 Facebook
               </a>
-              <a 
-                href="https://line.me/R/ti/p/@051pqsfe" 
-                target="_blank" 
+              <a
+                href="https://line.me/R/ti/p/@051pqsfe"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-green-500 transition-colors"
               >
@@ -509,8 +509,8 @@ function ProductCard({
             </p>
 
             <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
-              product.stock > 0 
-                ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+              product.stock > 0
+                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                 : "bg-rose-50 text-rose-600 border-rose-100"
             }`}>
               {product.stock > 0 ? `คลัง: ${product.stock}` : "หมด"}
