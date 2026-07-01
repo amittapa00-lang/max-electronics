@@ -111,13 +111,13 @@ export default async function Home() {
                 </a>
                 
                 {/* 2. LINE */}
-                <a href="https://line.me/ti/p/~@051pdsfe" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[#22c55e] transition-colors group">
+                <a href="https://line.me/R/ti/p/@051pqsfe" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[#22c55e] transition-colors group">
                   <div className="w-4 h-4 shrink-0 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <svg viewBox="0 0 24 24" fill="#22c55e" className="w-full h-full">
                       <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738s-12 4.369-12 9.738c0 4.814 4.269 8.846 10.036 9.564.39.084.922.258 1.057.592.12.313.079.803.039 1.121l-.171 1.027c-.052.31-.241 1.217 1.042.665 1.284-.553 6.923-4.077 9.441-6.976 1.733-1.859 2.556-3.896 2.556-6.013zm-16.945 3.328c0 .225-.183.407-.407.407h-1.341c-.225 0-.407-.182-.407-.407v-3.725c0-.225.182-.407.407-.407.225 0 .407.182.407.407v3.318h1.341c.224 0 .407.182.407.407zm2.254 0c0 .225-.183.407-.408.407h-.001c-.225 0-.407-.182-.407-.407v-3.725c0-.225.182-.407.407-.407.225 0 .408.182.408.407v3.725zm3.824 0c0 .167-.101.318-.255.381-.05.021-.102.031-.153.031-.109 0-.214-.044-.29-.124l-1.637-1.722v1.432c0 .225-.182.407-.407.407s-.407-.182-.407-.407v-3.725c0-.167.101-.318.255-.381.154-.063.332-.027.449.091l1.625 1.708v-1.417c0-.225.182-.407.407-.407s.407.182.407.407v3.725zm2.973-1.124c0 .225-.183.407-.407.407h-1.353v.717h1.353c.225 0 .407.182.407.407 0 .225-.182.407-.407.407h-1.761c-.224 0-.407-.182-.407-.407v-3.725c0-.225.183-.407.407-.407h1.761c.225 0 .407.182.407.407 0 .225-.182.407-.407.407h-1.353v.673h1.353c.225 0 .407.182.407.407z"/>
                     </svg>
                   </div>
-                  <span className="font-medium text-slate-200 group-hover:text-[#22c55e]">@051pdsfe</span>
+                  <span className="font-medium text-slate-200 group-hover:text-[#22c55e]">@051pqsfe</span>
                 </a>
                 
                 {/* 3. Facebook */}
@@ -326,7 +326,7 @@ export default async function Home() {
                 </p>
               </div>
               <a
-                href="https://line.me/ti/p/~@051pdsfe"
+                href="https://line.me/R/ti/p/@051pqsfe"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors w-fit"
@@ -368,7 +368,7 @@ export default async function Home() {
                 Facebook
               </a>
               <a 
-                href="https://line.me/ti/p/~@051pdsfe" 
+                href="https://line.me/R/ti/p/@051pqsfe" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="hover:text-green-500 transition-colors"
