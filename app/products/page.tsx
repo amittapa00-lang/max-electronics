@@ -473,10 +473,10 @@ export default async function ProductsPage({
             {category && (
               <input type="hidden" name="category" value={category} />
             )}
-            
+
             {/* ปุ่มแว่นขยายขนาดกะทัดรัด (แสดงเฉพาะบนมือถือ) */}
             <button type="submit" className="pg-mobile-search-btn" aria-label="Search">🔍</button>
-            
+
             {/* ปุ่มคำว่า ค้นหา ขนาดใหญ่ (แสดงเฉพาะบน Desktop) */}
             <button type="submit" className="pg-search-btn">ค้นหา</button>
           </form>
