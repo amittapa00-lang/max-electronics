@@ -3,6 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import CategorySidebar from "@/components/CategorySidebar";
 
+export const revalidate = 300;
+
 export default async function ProductsPage({
   searchParams,
 }: {
