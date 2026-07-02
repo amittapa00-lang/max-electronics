@@ -1,9 +1,8 @@
+import { getProducts } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
 import CategorySidebar from "@/components/CategorySidebar";
-
-export const revalidate = 300;
 
 export default async function ProductsPage({
   searchParams,
@@ -15,48 +14,40 @@ export default async function ProductsPage({
 }) {
   const { category, search } = await searchParams;
 
-  const categories = (await prisma.category.findMany({
-    where: { parentId: null },
-    include: {
-      children: {
-        orderBy: { name: "asc" },
-        include: { _count: { select: { products: true } } },
+  const categories =
+    (await prisma.category.findMany({
+      where: { parentId: null },
+      include: {
+        children: {
+          orderBy: { name: "asc" },
+          include: { _count: { select: { products: true } } },
+        },
+        _count: { select: { products: true } },
       },
-      _count: { select: { products: true } },
-    },
-  })) ?? [];
+    })) ?? [];
 
-  const products = await prisma.product.findMany({
-    where: {
-      AND: [
-        category
-          ? {
-              category: {
-                OR: [
-                  { name: category },
-                  { parent: { name: category } },
-                ],
-              },
-            }
-          : {},
-        search
-          ? {
-              OR: [
-                { name: { contains: search } },
-                { productCode: { contains: search } },
-              ],
-            }
-          : {},
-      ],
-    },
-    include: {
-      category: { include: { parent: true } },
-      images: true,
-    },
-    orderBy: { createdAt: "desc" },
+  // getProducts() is cached (unstable_cache) and returns ALL products,
+  // unfiltered — so category/search filtering now happens here in JS
+  // instead of inside the Prisma query.
+  const allProducts = await getProducts();
+
+  const searchLower = search?.toLowerCase();
+
+  const products = allProducts.filter((product) => {
+    const matchesCategory =
+      !category ||
+      product.category?.name === category ||
+      product.category?.parent?.name === category;
+
+    const matchesSearch =
+      !searchLower ||
+      product.name.toLowerCase().includes(searchLower) ||
+      product.productCode?.toLowerCase().includes(searchLower);
+
+    return matchesCategory && matchesSearch;
   });
 
-  const totalCount = await prisma.product.count();
+  const totalCount = allProducts.length;
 
   return (
     <>
@@ -114,9 +105,9 @@ export default async function ProductsPage({
         }
 
         .pg-search-input {
-          width: 100%; /* ให้ช่องพิมพ์ยาวเต็มพื้นที่ 100% บนมือถือ */
+          width: 100%;
           height: 46px;
-          padding: 0 48px 0 16px; /* เว้นระยะด้านขวาไว้สำหรับใส่ปุ่มไอคอนแว่นขยาย */
+          padding: 0 48px 0 16px;
           border: 1.5px solid #E2E8F0;
           border-radius: 12px;
           font-size: 14px;
@@ -131,7 +122,6 @@ export default async function ProductsPage({
           box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
         }
 
-        /* ปุ่มค้นหาแบบไอคอนแว่นขยาย (ใช้บนมือถือเพื่อประหยัดพื้นที่) */
         .pg-mobile-search-btn {
           position: absolute;
           right: 4px;
@@ -155,7 +145,6 @@ export default async function ProductsPage({
           background: #4F46E5;
         }
 
-        /* ซ่อนปุ่มค้นหาขนาดใหญ่แบบมีตัวหนังสือบนหน้าจอมือถือ */
         .pg-search-btn {
           display: none;
         }
@@ -367,7 +356,7 @@ export default async function ProductsPage({
           color: #94A3B8;
         }
 
-        /* 💻 ── Desktop Layout (คืนค่าให้ปุ่มกดค้นหาขนาดใหญ่แสดงผลบนคอมพิวเตอร์) ── */
+        /* 💻 ── Desktop Layout ── */
         @media (min-width: 768px) {
           .pg-root {
             padding: 40px 40px 80px;
@@ -383,7 +372,6 @@ export default async function ProductsPage({
             font-size: 26px;
           }
 
-          /* บน Desktop จะดันปุ่มและช่องพิมพ์ให้แยกกันตามเดิม */
           .pg-search-wrap {
             max-width: 400px;
             gap: 8px;
@@ -391,15 +379,13 @@ export default async function ProductsPage({
 
           .pg-search-input {
             flex: 1;
-            padding: 0 16px 0 16px; /* คืนค่า padding ปกติ ไม่ต้องหลบไอคอน */
+            padding: 0 16px 0 16px;
           }
 
-          /* ซ่อนปุ่มไอคอนแว่นขยายบน Desktop */
           .pg-mobile-search-btn {
             display: none;
           }
 
-          /* แสดงปุ่มค้นหาขนาดใหญ่แบบมีตัวหนังสือบน Desktop */
           .pg-search-btn {
             display: block;
             flex-shrink: 0;
@@ -474,10 +460,7 @@ export default async function ProductsPage({
               <input type="hidden" name="category" value={category} />
             )}
 
-            {/* ปุ่มแว่นขยายขนาดกะทัดรัด (แสดงเฉพาะบนมือถือ) */}
             <button type="submit" className="pg-mobile-search-btn" aria-label="Search">🔍</button>
-
-            {/* ปุ่มคำว่า ค้นหา ขนาดใหญ่ (แสดงเฉพาะบน Desktop) */}
             <button type="submit" className="pg-search-btn">ค้นหา</button>
           </form>
         </div>
@@ -518,7 +501,6 @@ export default async function ProductsPage({
               ) : (
                 products.map((product) => {
                   const displayPrice = Number(product.price || 0);
-                  // ป้องกัน crash ถ้าสินค้าไม่มีหมวดหมู่ (category = null ใน DB)
                   const categoryLabel = product.category?.parent
                     ? `${product.category.parent.name} › ${product.category.name}`
                     : product.category?.name ?? "ไม่ระบุหมวดหมู่";

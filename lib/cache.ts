@@ -6,7 +6,9 @@ export const getProducts = unstable_cache(
     return prisma.product.findMany({
       include: {
         images: true,
-        category: true,
+        category: {
+          include: { parent: true },
+        },
       },
       orderBy: {
         createdAt: "desc",
