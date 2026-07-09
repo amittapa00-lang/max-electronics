@@ -174,6 +174,9 @@ export default async function OrderDetailPage({
   const doneLinePct = Math.max(0, Math.min(100, (currentStep / (ORDER_STEPS.length - 1)) * 100));
 
   const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  // ✅ คำนวณราคาสินค้ารวมจากรายการ items จริง แทนการใช้ order.total ตรงๆ
+  // เพื่อให้ตัวเลขในส่วน "สรุปยอด" ตรงกับรายการสินค้าที่แสดงด้านบนเสมอ
+  const itemsTotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingFee = calcShippingFee(totalQty);
 
   return (
@@ -310,12 +313,12 @@ export default async function OrderDetailPage({
           {/* สรุปยอด */}
           <div style={card}>
             <SectionLabel icon="🧾" text="สรุปยอด" />
-            <SumRow label="ราคาสินค้า" value={`฿${order.total.toLocaleString()}`} />
+            <SumRow label="ราคาสินค้า" value={`฿${itemsTotal.toLocaleString()}`} />
             <SumRow label={`ค่าจัดส่ง (${totalQty} ชิ้น)`} value={`฿${shippingFee.toLocaleString()}`} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, marginTop: 2 }}>
               <span style={{ fontSize: 14, fontWeight: 500, color: "#111" }}>ยอดรวม</span>
               <span style={{ fontSize: 20, fontWeight: 500, color: "#185FA5" }}>
-                ฿{(order.total + shippingFee).toLocaleString()}
+                ฿{(itemsTotal + shippingFee).toLocaleString()}
               </span>
             </div>
           </div>

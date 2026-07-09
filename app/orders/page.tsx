@@ -53,8 +53,11 @@ export default async function OrdersPage() {
               firstItem?.product.images?.[0]?.imageUrl || "/uploads/no-image.jpg";
 
             const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
+            // ✅ คำนวณราคาสินค้ารวมจากรายการ items จริง แทนการใช้ order.total ตรงๆ
+            // เพื่อให้ยอดรวมตรงกับหน้ารายละเอียดคำสั่งซื้อเสมอ
+            const itemsTotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
             const shippingFee = calcShippingFee(totalQty);
-            const grandTotal = order.total + shippingFee;
+            const grandTotal = itemsTotal + shippingFee;
 
             const badge = statusMap[order.status] ?? {
               label: order.status, bg: "#f3f4f6", color: "#6b7280", border: "#d1d5db",
