@@ -2,6 +2,11 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
 
+// ป้องกันไม่ให้ Next.js cache หน้านี้แบบ static ตอน build
+// ทำให้ทุกครั้งที่มีคนเข้าหน้าแรก จะดึงข้อมูลสินค้าล่าสุดจาก DB เสมอ
+// (แก้ปัญหาสินค้าที่ถูกลบไปแล้ว ยังค้างแสดงอยู่ที่หน้าแรก)
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   // ดึงข้อมูลจริงโดยอิงจากความสัมพันธ์ใน schema.prisma
   const twentyDaysAgo = new Date();
