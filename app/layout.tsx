@@ -1,6 +1,7 @@
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Providers from "@/components/Providers";
+import PageViewTracker from "@/components/PageViewTracker";
 
 export default function RootLayout({
   children,
@@ -10,6 +11,7 @@ export default function RootLayout({
   return (
     <html lang="th">
       <body>
+        <PageViewTracker />
         <Providers>
           <Navbar />
           {children}
@@ -18,5 +20,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-
