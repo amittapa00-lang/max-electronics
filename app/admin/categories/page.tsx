@@ -62,7 +62,7 @@ export default async function CategoriesPage() {
             required
             className="
               flex-1
-              min-w-[250px]
+              min-w-250px
               border
               rounded-xl
               px-4
@@ -77,7 +77,7 @@ export default async function CategoriesPage() {
               rounded-xl
               px-4
               py-3
-              min-w-[220px]
+              min-w-220px
             "
           >
             <option value="">
