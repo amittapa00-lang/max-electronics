@@ -130,7 +130,11 @@ export async function POST(req: Request) {
         from: `"MAX Electronics" <${process.env.EMAIL_USER}>`,
 
         // ใส่อีเมลที่ต้องการรับแจ้งเตือน
-        to: process.env.EMAIL_USER,
+        to: [
+  process.env.EMAIL_USER!,
+  "maxtechelectric1@gmail.com",
+  "tcengineeringtradingcoltd@gmail.com",
+],
 
         subject: `มีคำสั่งซื้อใหม่ #${order.id}`,
 
