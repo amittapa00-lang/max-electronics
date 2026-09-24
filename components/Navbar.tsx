@@ -30,7 +30,7 @@ export default function Navbar() {
             onClick={() => setIsOpen(false)}
           >
             <Image
-              src="/logo.png"
+              src="/logomaxtech.png"
               alt="MaxTech Electric"
               width={186}
               height={100}
