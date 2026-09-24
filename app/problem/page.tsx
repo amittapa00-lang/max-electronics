@@ -129,7 +129,7 @@ export default function ProblemPage() {
               </div>
             </div>
             <a
-              href="https://lin.ee/SmaOgjw"
+              href="https://lin.ee/tC2FJRj"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -309,7 +309,7 @@ export default function ProblemPage() {
         {/* ── FOOTER CTA ── */}
         <div style={{ textAlign: "center", paddingTop: "2.5rem", borderTop: "0.5px solid #E5E7EB" }}>
           <a
-            href="https://lin.ee/SmaOgjw"
+            href="https://lin.ee/tC2FJRj"
             target="_blank"
             rel="noopener noreferrer"
             style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#06C755", color: "#fff", fontSize: 15, fontWeight: 500, padding: "0.85rem 2rem", borderRadius: 12, textDecoration: "none" }}

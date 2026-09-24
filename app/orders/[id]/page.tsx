@@ -341,7 +341,7 @@ export default async function OrderDetailPage({
               { label: "แก้ไขที่อยู่จัดส่ง" },
               { label: "ชำระแล้ว สถานะไม่เปลี่ยน" },
             ].map((item, i) => (
-              <a key={i} href="https://lin.ee/SmaOgjw" target="_blank" rel="noopener noreferrer"
+              <a key={i} href="https://lin.ee/tC2FJRj" target="_blank" rel="noopener noreferrer"
                 style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", border: "0.5px solid #e5e7eb", borderRadius: 8, fontSize: 13, color: "#6b7280", textDecoration: "none", marginBottom: 6 }}>
                 {item.label}
                 <span style={{ fontSize: 16, color: "#d1d5db" }}>›</span>

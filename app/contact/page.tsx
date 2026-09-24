@@ -72,12 +72,12 @@ export default function ContactPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Line Official</p>
-                  <a href="https://lin.ee/SmaOgjw" target="_blank" rel="noopener noreferrer" className="text-base font-bold text-slate-900 mt-0.5 block hover:text-emerald-600 transition-colors">
-                    @051pdsfe
+                  <a href="https://lin.ee/tC2FJRj" target="_blank" rel="noopener noreferrer" className="text-base font-bold text-slate-900 mt-0.5 block hover:text-emerald-600 transition-colors">
+                    @067rvfqe
                   </a>
                 </div>
               </div>
-              <a href="https://lin.ee/SmaOgjw" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-3 py-1.5 rounded-full flex items-center gap-1 shadow-xs hover:bg-emerald-100 transition-colors">
+              <a href="https://lin.ee/tC2FJRj" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-3 py-1.5 rounded-full flex items-center gap-1 shadow-xs hover:bg-emerald-100 transition-colors">
                 เพิ่มเพื่อน <ArrowUpRight size={12} />
               </a>
             </div>
