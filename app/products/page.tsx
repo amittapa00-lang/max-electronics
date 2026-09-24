@@ -14,16 +14,17 @@ export default async function ProductsPage({
 }) {
   const { category, search } = await searchParams;
 
-  const categories =
+ const categories =
     (await prisma.category.findMany({
       where: { parentId: null },
       include: {
         children: {
-          orderBy: { name: "asc" },
+          orderBy: [{ order: "asc" }, { name: "asc" }],
           include: { _count: { select: { products: true } } },
         },
         _count: { select: { products: true } },
       },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
     })) ?? [];
 
   // getProducts() is cached (unstable_cache) and returns ALL products,

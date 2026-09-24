@@ -347,6 +347,11 @@ export default function CategorySidebar({
 
           .cat-sidebar {
             width: 272px; /* ดึงความกว้าง 272px เดิมกลับคืนมาบนคอม */
+            position: sticky;         /* ให้กล่องติดตามตอนเลื่อนหน้าจอ */
+            top: 20px;                /* ระยะห่างจากขอบบนตอนเลื่อนถึง ปรับได้ */
+            align-self: flex-start;   /* กันไม่ให้กล่องยืดเต็มความสูงของแถว */
+            max-height: calc(100vh - 40px); /* ไม่ให้กล่องสูงเกินจอ */
+            overflow-y: auto;         /* ถ้าเมนูยาวเกินจอ ให้สกอลในกล่องเอง */
           }
 
           .cat-card {

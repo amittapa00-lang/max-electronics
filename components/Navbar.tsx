@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import UserMenu from "./UserMenu";
+import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -19,16 +20,23 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-white/90 border-b border-slate-100 shadow-xs backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="h-20 flex items-center justify-between">
+        <div className="min-h-20 flex items-center justify-between py-2">
           
           {/* Logo */}
           <Link
             href="/"
             prefetch={true}
-            className="text-2xl font-extrabold text-blue-600 tracking-tight whitespace-nowrap hover:opacity-90 transition-opacity"
+            className="flex items-center flex-shrink-0 hover:opacity-90 transition-opacity"
             onClick={() => setIsOpen(false)}
           >
-            MaxTech <span className="text-slate-900 font-medium text-xl sm:text-2xl">Electric</span>
+            <Image
+              src="/logo.png"
+              alt="MaxTech Electric"
+              width={186}
+              height={100}
+              priority
+              className="h-16 sm:h-20 w-auto object-contain py-1"
+            />
           </Link>
 
           {/* ปุ่มแฮมเบอร์เกอร์ */}
