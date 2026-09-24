@@ -107,22 +107,22 @@ export async function POST(req: Request) {
 
     // ส่งอีเมลแจ้งเตือนบริษัท
     try {
-      await sendOrderNotification({
-        orderId: order.id,
-        customerName: body.name,
-        email: user.email,
-        phone: body.phone,
-        address: body.address,
-        total,
-        itemCount,
-      });
-    } catch (emailError) {
-      // ถ้าส่งเมลไม่ได้ ไม่ให้คำสั่งซื้อเสีย
-      console.error(
-        "ส่งอีเมลแจ้งคำสั่งซื้อไม่สำเร็จ:",
-        emailError
-      );
-    }
+  console.log("📧 กำลังส่งอีเมลแจ้ง Order:", order.id);
+
+  await sendOrderNotification({
+    orderId: order.id,
+    customerName: body.name,
+    email: user.email,
+    phone: body.phone,
+    address: body.address,
+    total,
+    itemCount,
+  });
+
+  console.log("✅ ส่งอีเมลแจ้ง Order สำเร็จ:", order.id);
+} catch (emailError) {
+  console.error("❌ ส่งอีเมลแจ้ง Order ไม่สำเร็จ:", emailError);
+}
 
     return NextResponse.json({
       success: true,
