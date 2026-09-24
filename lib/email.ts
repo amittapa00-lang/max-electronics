@@ -20,7 +20,13 @@ export async function sendQuoteNotification(data: {
 }) {
   await transporter.sendMail({
     from: `"MaxTech Electric" <${process.env.EMAIL_USER}>`,
-    to: process.env.EMAIL_NOTIFY?.split(",").map((email) => email.trim()),
+    to: [
+      process.env.EMAIL_USER!,
+      ...(process.env.EMAIL_NOTIFY || "")
+        .split(",")
+        .map((email) => email.trim())
+        .filter(Boolean),
+    ],
     subject: `🔔 มีใบเสนอราคาใหม่ #${data.quoteId}`,
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.7;">
