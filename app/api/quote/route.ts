@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { sendQuoteNotification } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -20,7 +21,6 @@ export async function POST(req: Request) {
       subDistrict,
       zipCode,
 
-      // ฟิลด์เดิมที่ระบบใช้อยู่แล้ว
       companyName,
       contactName,
       quantity,
@@ -28,7 +28,6 @@ export async function POST(req: Request) {
       productId,
     } = await req.json();
 
-    // ตรวจสอบข้อมูลพื้นฐานที่ต้องมีทุกกรณี
     if (
       !contactName ||
       !email ||
@@ -45,7 +44,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // ตรวจสอบข้อมูลเฉพาะนิติบุคคล
     if (customerType === "juristic" && (!taxId || !businessName)) {
       return NextResponse.json(
         { error: "กรุณากรอกข้อมูลนิติบุคคลให้ครบ" },
@@ -76,7 +74,6 @@ export async function POST(req: Request) {
         note,
         productId: Number(productId),
 
-        // ฟิลด์ใหม่ — ต้องเพิ่มคอลัมน์เหล่านี้ใน model Quote ก่อน (ดูหมายเหตุด้านล่าง)
         customerType,
         firstName,
         lastName,
@@ -90,6 +87,23 @@ export async function POST(req: Request) {
       },
     });
 
+    // ส่งอีเมลแจ้งเตือนบริษัท
+    try {
+      await sendQuoteNotification({
+        quoteId: quote.id,
+        productName: product.name,
+        quantity: Number(quantity),
+        customerName: contactName,
+        email,
+        phone,
+        companyName,
+        note,
+      });
+    } catch (emailError) {
+      // ถ้าส่งเมลไม่ได้ ไม่ให้การบันทึกใบเสนอราคาล้มเหลว
+      console.error("ส่งอีเมลแจ้งใบเสนอราคาไม่สำเร็จ:", emailError);
+    }
+
     return NextResponse.json(quote);
   } catch (error) {
     console.error(error);
@@ -100,22 +114,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
-/**
- * หมายเหตุ: ต้องเพิ่มคอลัมน์ต่อไปนี้ใน model Quote ที่ schema.prisma
- * แล้วรัน `npx prisma migrate dev` ก่อน ไม่งั้น field ใหม่จะ error ตอนบันทึก:
- *
- * model Quote {
- *   ...
- *   customerType  String?
- *   firstName     String?
- *   lastName      String?
- *   taxId         String?
- *   businessName  String?
- *   address       String?
- *   province      String?
- *   district      String?
- *   subDistrict   String?
- *   zipCode       String?
- * }
- */

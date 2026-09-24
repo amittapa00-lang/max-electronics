@@ -2,21 +2,16 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { sendOrderNotification } from "@/lib/email";
 
-export async function POST(
-  req: Request
-) {
+export async function POST(req: Request) {
   try {
-    const session =
-      await getServerSession(
-        authOptions
-      );
+    const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
       return NextResponse.json(
         {
-          error:
-            "กรุณาเข้าสู่ระบบ",
+          error: "กรุณาเข้าสู่ระบบ",
         },
         {
           status: 401,
@@ -24,19 +19,16 @@ export async function POST(
       );
     }
 
-    const user =
-      await prisma.user.findUnique({
-        where: {
-          email:
-            session.user.email,
-        },
-      });
+    const user = await prisma.user.findUnique({
+      where: {
+        email: session.user.email,
+      },
+    });
 
     if (!user) {
       return NextResponse.json(
         {
-          error:
-            "ไม่พบผู้ใช้งาน",
+          error: "ไม่พบผู้ใช้งาน",
         },
         {
           status: 404,
@@ -44,26 +36,21 @@ export async function POST(
       );
     }
 
-    const body =
-      await req.json();
+    const body = await req.json();
 
-    const cartItems =
-      await prisma.cartItem.findMany({
-        where: {
-          userId: user.id,
-        },
-        include: {
-          product: true,
-        },
-      });
+    const cartItems = await prisma.cartItem.findMany({
+      where: {
+        userId: user.id,
+      },
+      include: {
+        product: true,
+      },
+    });
 
-    if (
-      cartItems.length === 0
-    ) {
+    if (cartItems.length === 0) {
       return NextResponse.json(
         {
-          error:
-            "ไม่มีสินค้าในตะกร้า",
+          error: "ไม่มีสินค้าในตะกร้า",
         },
         {
           status: 400,
@@ -71,72 +58,71 @@ export async function POST(
       );
     }
 
-    const productTotal =
-  cartItems.reduce(
-    (sum, item) =>
-      sum +
-      item.product.price *
-        item.quantity,
-    0
-  );
+    const productTotal = cartItems.reduce(
+      (sum, item) =>
+        sum + item.product.price * item.quantity,
+      0
+    );
 
-const itemCount =
-  cartItems.reduce(
-    (sum, item) =>
-      sum + item.quantity,
-    0
-  );
+    const itemCount = cartItems.reduce(
+      (sum, item) =>
+        sum + item.quantity,
+      0
+    );
 
-const shippingFee =
-  itemCount <= 2
-    ? 100
-    : 100 + (itemCount - 2) * 50;
+    const shippingFee =
+      itemCount <= 2
+        ? 100
+        : 100 + (itemCount - 2) * 50;
 
-const total =
-  productTotal + shippingFee;
+    const total = productTotal + shippingFee;
 
-    const order =
-      await prisma.order.create({
-        data: {
-          userId: user.id,
-          name: body.name,
-          phone: body.phone,
-          address:
-            body.address,
-          note:
-            body.note || null,
-          slip:
-            body.slip || null,
-          total,
-          status:
-            "WAITING_VERIFY",
-        },
+    const order = await prisma.order.create({
+      data: {
+        userId: user.id,
+        name: body.name,
+        phone: body.phone,
+        address: body.address,
+        note: body.note || null,
+        slip: body.slip || null,
+        total,
+        status: "WAITING_VERIFY",
+      },
+    });
+
+    await prisma.orderItem.createMany({
+      data: cartItems.map((item) => ({
+        orderId: order.id,
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.product.price,
+      })),
+    });
+
+    await prisma.cartItem.deleteMany({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    // ส่งอีเมลแจ้งเตือนบริษัท
+    try {
+      await sendOrderNotification({
+        orderId: order.id,
+        customerName: body.name,
+        email: user.email,
+        phone: body.phone,
+        address: body.address,
+        total,
+        itemCount,
       });
-
-    await prisma.orderItem.createMany(
-      {
-        data: cartItems.map(
-          (item) => ({
-            orderId:
-              order.id,
-            productId:
-              item.productId,
-            quantity:
-              item.quantity,
-            price:
-              item.product.price,
-          })
-        ),
-      }
-    );
-
-    await prisma.cartItem.deleteMany(
-      {
-        where: {
-          userId: user.id,
-        },
-      }
-    );
+    } catch (emailError) {
+      // ถ้าส่งเมลไม่ได้ ไม่ให้คำสั่งซื้อเสีย
+      console.error(
+        "ส่งอีเมลแจ้งคำสั่งซื้อไม่สำเร็จ:",
+        emailError
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -147,8 +133,7 @@ const total =
 
     return NextResponse.json(
       {
-        error:
-          "สร้างคำสั่งซื้อไม่สำเร็จ",
+        error: "สร้างคำสั่งซื้อไม่สำเร็จ",
       },
       {
         status: 500,
