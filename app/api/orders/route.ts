@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { sendOrderNotification } from "@/lib/email";
+import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
   try {
@@ -10,12 +10,8 @@ export async function POST(req: Request) {
 
     if (!session?.user?.email) {
       return NextResponse.json(
-        {
-          error: "กรุณาเข้าสู่ระบบ",
-        },
-        {
-          status: 401,
-        }
+        { error: "กรุณาเข้าสู่ระบบ" },
+        { status: 401 }
       );
     }
 
@@ -27,12 +23,8 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        {
-          error: "ไม่พบผู้ใช้งาน",
-        },
-        {
-          status: 404,
-        }
+        { error: "ไม่พบผู้ใช้งาน" },
+        { status: 404 }
       );
     }
 
@@ -49,12 +41,8 @@ export async function POST(req: Request) {
 
     if (cartItems.length === 0) {
       return NextResponse.json(
-        {
-          error: "ไม่มีสินค้าในตะกร้า",
-        },
-        {
-          status: 400,
-        }
+        { error: "ไม่มีสินค้าในตะกร้า" },
+        { status: 400 }
       );
     }
 
@@ -65,8 +53,7 @@ export async function POST(req: Request) {
     );
 
     const itemCount = cartItems.reduce(
-      (sum, item) =>
-        sum + item.quantity,
+      (sum, item) => sum + item.quantity,
       0
     );
 
@@ -105,24 +92,152 @@ export async function POST(req: Request) {
       },
     });
 
-    // ส่งอีเมลแจ้งเตือนบริษัท
+    // =========================
+    // ส่งอีเมลแจ้งเตือน Admin
+    // =========================
+
     try {
-  console.log("📧 กำลังส่งอีเมลแจ้ง Order:", order.id);
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
 
-  await sendOrderNotification({
-    orderId: order.id,
-    customerName: body.name,
-    email: user.email,
-    phone: body.phone,
-    address: body.address,
-    total,
-    itemCount,
-  });
+      const productList = cartItems
+        .map(
+          (item) =>
+            `
+            <tr>
+              <td style="padding:8px;border-bottom:1px solid #eee;">
+                ${item.product.name}
+              </td>
+              <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">
+                ${item.quantity}
+              </td>
+              <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">
+                ฿${(
+                  item.product.price * item.quantity
+                ).toLocaleString()}
+              </td>
+            </tr>
+            `
+        )
+        .join("");
 
-  console.log("✅ ส่งอีเมลแจ้ง Order สำเร็จ:", order.id);
-} catch (emailError) {
-  console.error("❌ ส่งอีเมลแจ้ง Order ไม่สำเร็จ:", emailError);
-}
+      await transporter.sendMail({
+        from: `"MAX Electronics" <${process.env.EMAIL_USER}>`,
+
+        // ใส่อีเมลที่ต้องการรับแจ้งเตือน
+        to: process.env.EMAIL_USER,
+
+        subject: `มีคำสั่งซื้อใหม่ #${order.id}`,
+
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;">
+
+            <h2 style="color:#185FA5;">
+              มีคำสั่งซื้อใหม่
+            </h2>
+
+            <p>
+              มีลูกค้าสั่งสินค้าเข้ามาใหม่
+            </p>
+
+            <hr />
+
+            <h3>ข้อมูลลูกค้า</h3>
+
+            <p>
+              <b>ชื่อ:</b> ${body.name}
+            </p>
+
+            <p>
+              <b>อีเมล:</b> ${session.user.email}
+            </p>
+
+            <p>
+              <b>โทร:</b> ${body.phone}
+            </p>
+
+            <p>
+              <b>ที่อยู่:</b> ${body.address}
+            </p>
+
+            ${
+              body.note
+                ? `<p><b>หมายเหตุ:</b> ${body.note}</p>`
+                : ""
+            }
+
+            <hr />
+
+            <h3>รายการสินค้า</h3>
+
+            <table
+              style="
+                width:100%;
+                border-collapse:collapse;
+              "
+            >
+              <thead>
+                <tr>
+                  <th style="text-align:left;padding:8px;">
+                    สินค้า
+                  </th>
+                  <th style="padding:8px;">
+                    จำนวน
+                  </th>
+                  <th style="text-align:right;padding:8px;">
+                    ราคา
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                ${productList}
+              </tbody>
+            </table>
+
+            <hr />
+
+            <p>
+              <b>ค่าสินค้า:</b>
+              ฿${productTotal.toLocaleString()}
+            </p>
+
+            <p>
+              <b>ค่าจัดส่ง:</b>
+              ฿${shippingFee.toLocaleString()}
+            </p>
+
+            <h2 style="color:#185FA5;">
+              ยอดรวม ฿${total.toLocaleString()}
+            </h2>
+
+            <p>
+              <b>สถานะ:</b> รอตรวจสอบ
+            </p>
+
+            <p>
+              <b>เลขคำสั่งซื้อ:</b> #${order.id}
+            </p>
+
+          </div>
+        `,
+      });
+
+      console.log(
+        `ส่งอีเมลแจ้งเตือน Order #${order.id} สำเร็จ`
+      );
+    } catch (emailError) {
+      // ถ้าส่งอีเมลไม่ได้ จะไม่ทำให้การสั่งซื้อล้มเหลว
+      console.error(
+        "ส่งอีเมลแจ้งเตือน Order ไม่สำเร็จ:",
+        emailError
+      );
+    }
 
     return NextResponse.json({
       success: true,
