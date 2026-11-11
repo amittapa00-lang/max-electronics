@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
 
       <button
         onClick={sendOTP}
-        className="w-full bg-blue-600 text-white py-3 rounded-lg"
+        className="w-full bg-brand-600 text-white py-3 rounded-lg"
       >
         ส่ง OTP
       </button>

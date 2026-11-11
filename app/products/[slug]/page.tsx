@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { BadgeCheck, ChevronRight, FileText, Phone, ShieldCheck, Truck } from "lucide-react";
 import ProductGallery from "./ProductGallery";
 import AddToCartButton from "@/components/AddToCartButton";
+import ProductCard from "@/components/ProductCard";
+import { LineIcon, SHOP_LINE_URL, SHOP_PHONE, SHOP_PHONE_TEL } from "@/components/SocialIcons";
 
 export default async function ProductDetailPage({
   params,
@@ -13,421 +16,212 @@ export default async function ProductDetailPage({
 
   const product = await prisma.product.findUnique({
     where: { slug },
-    include: { category: true, images: true },
+    include: { category: { include: { parent: true } }, images: true },
   });
 
   if (!product) notFound();
 
-  // ป้องกัน crash ถ้าสินค้าไม่มีหมวดหมู่ (category = null ใน DB)
+  const related = product.categoryId
+    ? await prisma.product.findMany({
+        where: { categoryId: product.categoryId, id: { not: product.id } },
+        take: 5,
+        orderBy: { updatedAt: "desc" },
+        include: { category: true, images: true },
+      })
+    : [];
+
   const categoryName = product.category?.name ?? "ไม่ระบุหมวดหมู่";
+  const parentName = product.category?.parent?.name;
+  const inStock = product.stock > 0;
 
   return (
-    <>
-      <style>{`
-        .pdp-root {
-          --color-bg: #FAFAF8;
-          --color-surface: #F2F0EC;
-          --color-border: #E4E2DE;
-          --color-ink: #1A1A1A;
-          --color-muted: #6B6B6B;
-          --color-accent: #C8922A;
-          --color-accent-light: #FDF4E7;
-          --color-success: #1E7A4A;
-          --color-success-bg: #E8F5EE;
-          --color-danger: #B33A3A;
-          --color-danger-bg: #FAEAEA;
-          --radius-sm: 6px;
-          --radius-md: 12px;
-          --radius-lg: 20px;
-          --shadow-card: 0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-          --shadow-btn: 0 4px 14px rgba(200,146,42,0.35);
-          font-family: 'Inter', 'Noto Sans Thai', sans-serif;
-        }
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-500 min-w-0" aria-label="breadcrumb">
+        <Link href="/" className="shrink-0 hover:text-brand-600">หน้าแรก</Link>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+        <Link href="/products" className="shrink-0 hover:text-brand-600">สินค้า</Link>
+        {parentName && (
+          <>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            <Link href={`/products?category=${encodeURIComponent(parentName)}`} className="truncate hover:text-brand-600">{parentName}</Link>
+          </>
+        )}
+        {product.category && (
+          <>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+            <Link href={`/products?category=${encodeURIComponent(product.category.name)}`} className="truncate hover:text-brand-600">
+              {product.category.name}
+            </Link>
+          </>
+        )}
+      </nav>
 
-        .pdp-wrapper {
-          min-height: 100vh;
-          background: var(--color-bg);
-          padding: 0 0 80px;
-        }
+      <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-start">
+        {/* รูปสินค้า */}
+        <div className="lg:sticky lg:top-36">
+          <ProductGallery images={product.images} productName={product.name} />
+        </div>
 
-        /* ── Breadcrumb ── */
-        .pdp-breadcrumb {
-          max-width: 1120px;
-          margin: 0 auto;
-          padding: 20px 24px 0;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          color: var(--color-muted);
-        }
-        .pdp-breadcrumb a {
-          color: var(--color-muted);
-          text-decoration: none;
-          transition: color .15s;
-        }
-        .pdp-breadcrumb a:hover { color: var(--color-ink); }
-        .pdp-breadcrumb-sep { opacity: .4; }
-        .pdp-breadcrumb-current { color: var(--color-ink); font-weight: 500; }
+        {/* ข้อมูลสินค้า */}
+        <div>
+          <Link
+            href={`/products?category=${encodeURIComponent(categoryName)}`}
+            className="inline-block rounded bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100"
+          >
+            {categoryName}
+          </Link>
 
-        /* ── Grid ── */
-        .pdp-grid {
-          max-width: 1120px;
-          margin: 28px auto 0;
-          padding: 0 24px;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 56px;
-          align-items: start;
-        }
-        @media (max-width: 768px) {
-          .pdp-grid { grid-template-columns: 1fr; gap: 32px; }
-        }
+          <h1 className="mt-3 text-2xl sm:text-3xl font-bold leading-snug text-slate-900">{product.name}</h1>
 
-        /* ── Gallery column ── */
-        .pdp-gallery-col {
-          position: sticky;
-          top: 24px;
-        }
-
-        /* ── Info column ── */
-        .pdp-info {
-          padding-top: 4px;
-        }
-
-        /* Category badge */
-        .pdp-category {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: var(--color-accent-light);
-          color: var(--color-accent);
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: .06em;
-          text-transform: uppercase;
-          padding: 4px 12px;
-          border-radius: 999px;
-          border: 1px solid rgba(200,146,42,.2);
-        }
-
-        /* Product name */
-        .pdp-name {
-          margin: 14px 0 0;
-          font-size: clamp(26px, 3vw, 34px);
-          font-weight: 700;
-          color: var(--color-ink);
-          line-height: 1.2;
-          letter-spacing: -.02em;
-        }
-
-        /* Product code */
-        .pdp-code {
-          margin-top: 8px;
-          font-size: 13px;
-          color: var(--color-muted);
-          font-family: 'SF Mono', 'Fira Code', monospace;
-          letter-spacing: .03em;
-        }
-
-        /* Divider */
-        .pdp-divider {
-          margin: 20px 0;
-          border: none;
-          border-top: 1px solid var(--color-border);
-        }
-
-        /* Description */
-        .pdp-description {
-          font-size: 15px;
-          color: #4A4A4A;
-          line-height: 1.75;
-        }
-
-        /* Price block */
-        .pdp-price-block {
-          margin-top: 24px;
-          display: flex;
-          align-items: baseline;
-          gap: 6px;
-        }
-        .pdp-price-currency {
-          font-size: 20px;
-          font-weight: 600;
-          color: var(--color-accent);
-          margin-bottom: 4px;
-        }
-        .pdp-price-value {
-          font-size: 44px;
-          font-weight: 800;
-          color: var(--color-accent);
-          letter-spacing: -.03em;
-          line-height: 1;
-        }
-
-        /* Stock badge */
-        .pdp-stock {
-          margin-top: 14px;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          font-weight: 500;
-          padding: 5px 12px;
-          border-radius: 999px;
-        }
-        .pdp-stock.in-stock {
-          background: var(--color-success-bg);
-          color: var(--color-success);
-        }
-        .pdp-stock.out-stock {
-          background: var(--color-danger-bg);
-          color: var(--color-danger);
-        }
-        .pdp-stock-dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: currentColor;
-          flex-shrink: 0;
-        }
-
-        /* CTA area */
-        .pdp-cta {
-          margin-top: 28px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        /* Add to cart wrapper — let the component inside stay unstyled */
-        .pdp-atc-wrapper button,
-        .pdp-atc-wrapper a {
-          width: 100%;
-          padding: 16px 28px;
-          border-radius: var(--radius-md);
-          font-size: 16px;
-          font-weight: 700;
-          background: var(--color-ink);
-          color: #fff;
-          border: none;
-          cursor: pointer;
-          transition: background .2s, transform .15s;
-          letter-spacing: .01em;
-        }
-        .pdp-atc-wrapper button:hover,
-        .pdp-atc-wrapper a:hover {
-          background: #333;
-          transform: translateY(-1px);
-        }
-        .pdp-atc-wrapper button:active,
-        .pdp-atc-wrapper a:active {
-          transform: translateY(0);
-        }
-
-        .pdp-btn-soldout {
-          width: 100%;
-          padding: 16px 28px;
-          border-radius: var(--radius-md);
-          font-size: 16px;
-          font-weight: 700;
-          background: var(--color-surface);
-          color: var(--color-muted);
-          border: 1.5px solid var(--color-border);
-          cursor: not-allowed;
-          letter-spacing: .01em;
-        }
-
-        /* Shipping note */
-        .pdp-shipping-note {
-          margin-top: 6px;
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          font-size: 13px;
-          color: var(--color-muted);
-        }
-        .pdp-shipping-note svg {
-          flex-shrink: 0;
-          opacity: .6;
-        }
-
-        /* Meta info row */
-        .pdp-meta-row {
-          margin-top: 28px;
-          padding: 16px;
-          background: var(--color-surface);
-          border-radius: var(--radius-md);
-          border: 1px solid var(--color-border);
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-        .pdp-meta-item {
-          display: flex;
-          flex-direction: column;
-          gap: 3px;
-        }
-        .pdp-meta-label {
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: .07em;
-          text-transform: uppercase;
-          color: var(--color-muted);
-        }
-        .pdp-meta-value {
-          font-size: 14px;
-          font-weight: 500;
-          color: var(--color-ink);
-        }
-      `}</style>
-
-      <div className="pdp-root pdp-wrapper">
-
-        {/* Breadcrumb */}
-        <nav className="pdp-breadcrumb" aria-label="breadcrumb">
-          <Link href="/">หน้าหลัก</Link>
-          <span className="pdp-breadcrumb-sep">›</span>
-          <Link href="/products">สินค้าทั้งหมด</Link>
-          {product.category && (
-            <>
-              <span className="pdp-breadcrumb-sep">›</span>
-              <Link href={`/category/${product.category.name}`}>{product.category.name}</Link>
-            </>
+          {product.productCode && (
+            <p className="mt-2 text-sm text-slate-500">
+              รหัสรุ่น: <span className="font-mono font-semibold text-slate-800">{product.productCode}</span>
+            </p>
           )}
-          <span className="pdp-breadcrumb-sep">›</span>
-          <span className="pdp-breadcrumb-current">{product.name}</span>
-        </nav>
 
-        {/* Main grid */}
-        <div className="pdp-grid">
-
-          {/* Left — Gallery */}
-          <div className="pdp-gallery-col">
-            <ProductGallery images={product.images} productName={product.name} />
-          </div>
-
-          {/* Right — Info */}
-          <div className="pdp-info">
-            <span className="pdp-category">{categoryName}</span>
-
-            <h1 className="pdp-name">{product.name}</h1>
-
-            <p className="pdp-code">SKU : {product.productCode}</p>
-
-            <hr className="pdp-divider" />
-
-            <p className="pdp-description">{product.description}</p>
-
-            {/* Price */}
+          {/* ราคา + สถานะ */}
+          <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5">
             {product.quotationOnly ? (
-              <div className="pdp-price-block">
-                <span
-                  className="pdp-price-value"
-                  style={{ color: "#2563EB", fontSize: "30px" }}
-                >
-                  📄 ขอใบเสนอราคา
-                </span>
+              <div>
+                <p className="text-sm text-slate-500">ราคา</p>
+                <p className="mt-1 text-2xl font-bold text-slate-900">ขอใบเสนอราคา</p>
+                <p className="mt-1 text-sm text-slate-500">ราคาขึ้นกับจำนวนและสเปก ทีมงานจะติดต่อกลับพร้อมใบเสนอราคา</p>
               </div>
             ) : (
-              <div className="pdp-price-block">
-                <span className="pdp-price-currency">฿</span>
-                <span className="pdp-price-value">
-                  {product.price.toLocaleString()}
-                </span>
-              </div>
-            )}
-
-            {/* Stock */}
-            {product.stock > 0 ? (
-              <span className="pdp-stock in-stock">
-                <span className="pdp-stock-dot" />
-                มีสินค้า · เหลือ {product.stock} ชิ้น
-              </span>
-            ) : (
-              <span className="pdp-stock out-stock">
-                <span className="pdp-stock-dot" />
-                สินค้าหมด
-              </span>
-            )}
-
-            {/* CTA */}
-            <div className="pdp-cta">
-
-              {product.quotationOnly ? (
-
-                <Link href={`/quote/${product.id}`} className="pdp-atc-wrapper">
-                  <button className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition">
-                    📄 ขอใบเสนอราคา
-                  </button>
-                </Link>
-
-              ) : product.stock > 0 ? (
-
-                <>
-                  <div className="pdp-atc-wrapper">
-                    <AddToCartButton productId={product.id} />
-                  </div>
-
-                  <p className="pdp-shipping-note">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="1" y="3" width="15" height="13" rx="1"/>
-                      <path d="M16 8h4l3 5v3h-7V8z"/>
-                      <circle cx="5.5" cy="18.5" r="2.5"/>
-                      <circle cx="18.5" cy="18.5" r="2.5"/>
-                    </svg>
-
-                    จัดส่งภายใน 1–3 วันทำการ
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-sm text-slate-500">ราคา (รวม VAT)</p>
+                  <p className="mt-1 text-4xl font-bold leading-none text-brand-600">
+                    <span className="mr-1 text-2xl">฿</span>
+                    {product.price.toLocaleString()}
                   </p>
-                </>
-
-              ) : (
-
-                <button
-                  disabled
-                  className="pdp-btn-soldout"
+                </div>
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${
+                    inStock ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                  }`}
                 >
-                  สินค้าหมดชั่วคราว
-                </button>
-
-              )}
-
-            </div>
-
-            {/* Meta */}
-            <div className="pdp-meta-row">
-              <div className="pdp-meta-item">
-                <span className="pdp-meta-label">หมวดหมู่</span>
-                <span className="pdp-meta-value">{categoryName}</span>
-              </div>
-              <div className="pdp-meta-item">
-                <span className="pdp-meta-label">รหัสสินค้า</span>
-                <span className="pdp-meta-value">{product.productCode}</span>
-              </div>
-              <div className="pdp-meta-item">
-                <span className="pdp-meta-label">สถานะ</span>
-                <span className="pdp-meta-value">
-                  {product.stock > 0 ? "พร้อมจัดส่ง" : "สินค้าหมด"}
+                  <span className={`h-2 w-2 rounded-full ${inStock ? "bg-emerald-500" : "bg-slate-400"}`} />
+                  {inStock ? `มีสินค้า ${product.stock} ชิ้น` : "สินค้าหมด"}
                 </span>
               </div>
-              <div className="pdp-meta-item">
-                <span className="pdp-meta-label">คงเหลือ</span>
-                <span className="pdp-meta-value">{product.stock} ชิ้น</span>
-              </div>
-            </div>
+            )}
 
+            <div className="mt-5">
+              {product.quotationOnly ? (
+                <Link
+                  href={`/quote/${product.id}`}
+                  className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 text-base font-semibold text-white hover:bg-brand-700 transition-colors"
+                >
+                  <FileText className="h-5 w-5" /> ขอใบเสนอราคา
+                </Link>
+              ) : inStock ? (
+                <AddToCartButton productId={product.id} />
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    disabled
+                    className="h-13 w-full cursor-not-allowed rounded-lg bg-slate-100 text-base font-semibold text-slate-400"
+                  >
+                    สินค้าหมดชั่วคราว
+                  </button>
+                  <a
+                    href={SHOP_LINE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    <LineIcon className="h-4 w-4 text-[#06C755]" /> สอบถามวันเข้าของ
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* จุดเด่นร้าน */}
+          <ul className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {[
+              { icon: BadgeCheck, text: "สินค้าแท้ 100%" },
+              { icon: Truck, text: "ส่งภายใน 1–3 วันทำการ" },
+              { icon: ShieldCheck, text: "รับประกันสินค้า" },
+            ].map((f) => (
+              <li key={f.text} className="flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                <f.icon className="h-4.5 w-4.5 shrink-0 text-brand-600" /> {f.text}
+              </li>
+            ))}
+          </ul>
+
+          {/* สอบถาม */}
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl bg-slate-900 p-4 text-white">
+            <p className="flex-1 text-sm">
+              <span className="font-semibold">มีคำถามเรื่องสเปก?</span>
+              <span className="text-slate-300"> ทีมงานช่วยเช็กรุ่นที่ใช้แทนกันได้</span>
+            </p>
+            <div className="flex gap-2">
+              <a href={SHOP_PHONE_TEL} className="inline-flex h-10 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-lg bg-white/10 px-3 text-sm font-semibold hover:bg-white/20">
+                <Phone className="h-4 w-4" /> {SHOP_PHONE}
+              </a>
+              <a href={SHOP_LINE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-lg bg-[#06C755] px-3 text-sm font-semibold hover:brightness-95">
+                <LineIcon className="h-4 w-4" /> LINE
+              </a>
+            </div>
+          </div>
+
+          {/* รายละเอียด + สเปก */}
+          <section className="mt-6 rounded-xl border border-slate-200 bg-white">
+            <h2 className="border-b border-slate-200 px-5 py-3.5 font-semibold text-slate-900">รายละเอียดสินค้า</h2>
+            <div className="px-5 py-4">
+              {product.description ? (
+                <p className="whitespace-pre-line text-[15px] leading-relaxed text-slate-700">{product.description}</p>
+              ) : (
+                <p className="text-sm text-slate-400">ยังไม่มีรายละเอียดเพิ่มเติม</p>
+              )}
+            </div>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 border-t border-slate-200 text-sm">
+              <SpecRow label="หมวดหมู่" value={categoryName} />
+              <SpecRow label="รหัสรุ่น" value={product.productCode || "-"} mono />
+              <SpecRow
+                label="สถานะ"
+                value={product.quotationOnly ? "สั่งตามใบเสนอราคา" : inStock ? "พร้อมจัดส่ง" : "สินค้าหมด"}
+              />
+              <SpecRow label="ค่าจัดส่ง" value="เริ่มต้น ฿50 (1–2 ชิ้นแรก) ชิ้นถัดไป +฿50" />
+            </dl>
+          </section>
         </div>
       </div>
-    </>
+
+      {/* สินค้าในหมวดเดียวกัน */}
+      {related.length > 0 && (
+        <section className="mt-12">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <h2 className="flex items-center gap-2.5 text-xl font-bold text-slate-900">
+              <span className="h-6 w-1.5 rounded-full bg-brand-600" /> สินค้าในหมวดเดียวกัน
+            </h2>
+            <Link
+              href={`/products?category=${encodeURIComponent(categoryName)}`}
+              className="shrink-0 text-sm font-semibold text-brand-600 hover:text-brand-700"
+            >
+              ดูทั้งหมด →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}
+
+function SpecRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex gap-3 border-b border-slate-100 px-5 py-3 sm:[&:nth-last-child(-n+2)]:border-b-0 last:border-b-0">
+      <dt className="w-24 shrink-0 text-slate-500">{label}</dt>
+      <dd className={`min-w-0 font-medium text-slate-800 ${mono ? "font-mono" : ""}`}>{value}</dd>
+    </div>
   );
 }

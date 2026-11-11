@@ -1,14 +1,29 @@
-import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import {
+  AlertTriangle,
+  ChevronRight,
+  ClipboardList,
+  ImageOff,
+  MapPin,
+  MessageCircle,
+  Package,
+  Receipt,
+  ShieldCheck,
+  Truck,
+} from "lucide-react";
+import OrderStatusBadge from "@/components/OrderStatusBadge";
+import { SHOP_LINE_URL } from "@/components/SocialIcons";
+import { orderShippingFee } from "@/lib/shipping";
 
 const ORDER_STEPS = [
-  { label: "รอชำระเงิน", icon: "💳", key: "PENDING" },
-  { label: "ตรวจสลิป", icon: "🔍", key: "WAITING_VERIFY" },
-  { label: "ชำระแล้ว", icon: "✅", key: "PAID" },
-  { label: "เตรียมสินค้า", icon: "📦", key: "PREPARING" },
-  { label: "จัดส่ง", icon: "🚚", key: "SHIPPING" },
-  { label: "สำเร็จ", icon: "🏠", key: "COMPLETED" },
+  { label: "รอชำระเงิน", key: "PENDING" },
+  { label: "ตรวจสลิป", key: "WAITING_VERIFY" },
+  { label: "ชำระแล้ว", key: "PAID" },
+  { label: "เตรียมสินค้า", key: "PREPARING" },
+  { label: "จัดส่ง", key: "SHIPPING" },
+  { label: "สำเร็จ", key: "COMPLETED" },
 ];
 
 function getStepIndex(status: string): number {
@@ -19,139 +34,18 @@ function getStepIndex(status: string): number {
   return map[status] ?? 0;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, React.CSSProperties> = {
-    COMPLETED: { background: "#EAF3DE", color: "#27500A", borderColor: "#97C459" },
-    PENDING:   { background: "#FAEEDA", color: "#633806", borderColor: "#FAC775" },
-    WAITING_VERIFY: { background: "#FAEEDA", color: "#633806", borderColor: "#FAC775" },
-    PAID:      { background: "#E6F1FB", color: "#0C447C", borderColor: "#85B7EB" },
-    PREPARING: { background: "#E6F1FB", color: "#0C447C", borderColor: "#85B7EB" },
-    SHIPPING:  { background: "#E6F1FB", color: "#0C447C", borderColor: "#85B7EB" },
-    CANCELLED: { background: "#FCEBEB", color: "#791F1F", borderColor: "#F09595" },
-  };
-  const labels: Record<string, string> = {
-    PENDING: "รอชำระเงิน", WAITING_VERIFY: "รอตรวจสลิป",
-    PAID: "ชำระเงินแล้ว", PREPARING: "กำลังเตรียมสินค้า",
-    SHIPPING: "กำลังจัดส่ง", COMPLETED: "จัดส่งสำเร็จ", CANCELLED: "ยกเลิกแล้ว",
-  };
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: 5,
-      fontSize: 12, fontWeight: 500, padding: "4px 12px",
-      borderRadius: 20, border: "0.5px solid",
-      ...(styles[status] ?? { background: "#f3f4f6", color: "#6b7280", borderColor: "#d1d5db" }),
-    }}>
-      {labels[status] ?? status}
-    </span>
-  );
-}
 
-function PolicySection() {
-  return (
-    <details style={{ border: "0.5px solid #e5e7eb", borderRadius: 12, overflow: "hidden", marginTop: 24 }}>
-      <summary style={{
-        padding: "14px 20px", cursor: "pointer", listStyle: "none",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "#fff", fontSize: 12, fontWeight: 500,
-        color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em",
-        userSelect: "none",
-      }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          📋 นโยบายการเปลี่ยน / คืนสินค้า และการรับประกัน
-        </span>
-        <span style={{ fontSize: 16, color: "#d1d5db" }}>›</span>
-      </summary>
+const STATUS_HINT: Record<string, string> = {
+  PENDING: "กรุณาชำระเงินและแนบสลิปเพื่อยืนยันคำสั่งซื้อ",
+  WAITING_VERIFY: "ได้รับคำสั่งซื้อแล้ว ทีมงานกำลังตรวจสอบสลิปการโอนเงิน",
+  PAID: "ชำระเงินเรียบร้อย กำลังเตรียมจัดส่ง",
+  PREPARING: "กำลังแพ็กสินค้า จะแจ้งเลขพัสดุเมื่อจัดส่งแล้ว",
+  SHIPPING: "สินค้าอยู่ระหว่างการจัดส่ง ตรวจสอบเลขพัสดุด้านล่าง",
+  COMPLETED: "จัดส่งสำเร็จ ขอบคุณที่ใช้บริการ MaxTech Electric",
+  CANCELLED: "คำสั่งซื้อนี้ถูกยกเลิกแล้ว",
+};
 
-      <div style={{ padding: "0 20px 20px", background: "#fff", borderTop: "0.5px solid #e5e7eb" }}>
-
-        {/* ข้อตกลงการสั่งซื้อ */}
-        <PolicyBlock title="📌 ข้อตกลงการสั่งซื้อและการยกเลิก" color="#FAEEDA" borderColor="#FAC775" textColor="#633806">
-          <PolicyList items={[
-            "คำสั่งซื้อที่ชำระเงินและยืนยันรายการแล้ว ไม่สามารถยกเลิกได้",
-            "กรณีร้านค้าได้ดำเนินการจัดส่งสินค้าแล้ว จะไม่สามารถยกเลิกคำสั่งซื้อได้",
-            "ร้านค้าไม่รับผิดชอบต่อความเสียหายที่เกิดจากการใช้งานผิดวิธี การติดตั้งไม่ถูกต้อง หรือเหตุสุดวิสัยภายหลังจากลูกค้าได้รับสินค้า",
-          ]} />
-        </PolicyBlock>
-
-        {/* นโยบายการเปลี่ยน */}
-        <PolicyBlock title="🔄 นโยบายการเปลี่ยนสินค้า" color="#E6F1FB" borderColor="#85B7EB" textColor="#0C447C">
-          <PolicyList items={[
-            "กรณีสินค้าเกิดความเสียหายจากการผลิต หรือไม่สามารถใช้งานได้ตามปกติ สามารถแจ้งขอเปลี่ยนได้ภายใน 30 วัน นับจากวันที่ได้รับสินค้า",
-            "สินค้าที่ส่งเคลมต้องอยู่ในสภาพเดิม พร้อมบรรจุภัณฑ์ อุปกรณ์ครบถ้วน และสติกเกอร์รับประกันของร้านต้องไม่ฉีกขาด ชำรุด หรือถูกแก้ไข",
-            "หากร้านค้าไม่มีสินค้ารุ่นเดียวกัน ขอสงวนสิทธิ์คืนเงินค่าสินค้า หรือเปลี่ยนเป็นสินค้ารุ่นอื่นที่มีมูลค่าเทียบเท่า",
-            "ค่าจัดส่งสินค้ากลับมายังร้านค้า ลูกค้าเป็นผู้รับผิดชอบ",
-            "กรณีได้รับอนุมัติการคืนเงิน ร้านค้าจะคืนเฉพาะค่าสินค้า ไม่รวมค่าจัดส่ง",
-            "ทางร้านจะดำเนินการจัดส่งสินค้าทดแทนหรือคืนเงินภายใน 7 วันทำการ หลังได้รับสินค้าคืนและตรวจสอบแล้ว",
-          ]} />
-        </PolicyBlock>
-
-        {/* การรับประกัน */}
-        <PolicyBlock title="🛡️ เงื่อนไขการรับประกัน" color="#EAF3DE" borderColor="#97C459" textColor="#27500A">
-          <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-            <WarrantyBadge label="สินค้าใหม่" value="3 เดือน" />
-            <WarrantyBadge label="สินค้ามือสอง" value="1 เดือน" />
-          </div>
-          <p style={{ fontSize: 12, color: "#27500A", marginBottom: 6, fontWeight: 500 }}>
-            ครอบคลุมเฉพาะความเสียหายที่เกิดจากตัวสินค้า ภายใต้การใช้งานตามปกติ
-          </p>
-          <p style={{ fontSize: 12, color: "#374151", marginBottom: 4 }}>การรับประกัน <strong>ไม่ครอบคลุม</strong> กรณีดังต่อไปนี้</p>
-          <PolicyList items={[
-            "การใช้งานเกินสเปกหรือผิดวัตถุประสงค์ของสินค้า",
-            "ความเสียหายจากการติดตั้ง ดัดแปลง หรือซ่อมแซมโดยไม่ได้รับอนุญาต",
-            "ความเสียหายจากอุบัติเหตุ ไฟไหม้ น้ำท่วม ไฟฟ้าลัดวงจร ฟ้าผ่า หรือภัยธรรมชาติ",
-            "ความเสียหายจากความประมาทหรือการใช้งานไม่ถูกต้องของผู้ใช้",
-            "สินค้าที่สติกเกอร์รับประกันชำรุด ฉีกขาด ถูกลอก หรือมีการแก้ไข",
-          ]} />
-        </PolicyBlock>
-
-        {/* ข้อสงวนสิทธิ์ */}
-        <div style={{ background: "#FCEBEB", border: "0.5px solid #F09595", borderRadius: 8, padding: "12px 14px", marginTop: 12 }}>
-          <p style={{ fontSize: 12, fontWeight: 500, color: "#791F1F", marginBottom: 4 }}>⚠️ ข้อสงวนสิทธิ์</p>
-          <p style={{ fontSize: 12, color: "#A32D2D", lineHeight: 1.7 }}>
-            ทางร้านไม่รับเปลี่ยน คืน หรือคืนเงินสินค้า กรณีที่ลูกค้าสั่งซื้อผิดรุ่น ผิดสเปก ผิดขนาด หรือผิดประเภทสินค้า
-            กรุณาตรวจสอบรายละเอียดสินค้าให้ถูกต้องก่อนทำการสั่งซื้อทุกครั้ง
-          </p>
-        </div>
-
-      </div>
-    </details>
-  );
-}
-
-function PolicyBlock({
-  title, color, borderColor, textColor, children,
-}: {
-  title: string; color: string; borderColor: string; textColor: string; children: React.ReactNode;
-}) {
-  return (
-    <div style={{ background: color, border: `0.5px solid ${borderColor}`, borderRadius: 8, padding: "12px 14px", marginTop: 12 }}>
-      <p style={{ fontSize: 12, fontWeight: 500, color: textColor, marginBottom: 8 }}>{title}</p>
-      {children}
-    </div>
-  );
-}
-
-function PolicyList({ items }: { items: string[] }) {
-  return (
-    <ul style={{ fontSize: 12, color: "#374151", paddingLeft: 16, lineHeight: 1.9, margin: 0 }}>
-      {items.map((item, i) => <li key={i}>{item}</li>)}
-    </ul>
-  );
-}
-
-function WarrantyBadge({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ background: "#fff", border: "0.5px solid #97C459", borderRadius: 8, padding: "6px 12px", textAlign: "center" }}>
-      <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 2 }}>{label}</p>
-      <p style={{ fontSize: 13, fontWeight: 500, color: "#27500A" }}>{value}</p>
-    </div>
-  );
-}
-
-function calcShippingFee(totalQty: number): number {
-  if (totalQty <= 2) return 100;
-  return 100 + (totalQty - 2) * 50;
-}
+const dateFmt = new Intl.DateTimeFormat("th-TH", { dateStyle: "long", timeStyle: "short", timeZone: "Asia/Bangkok" });
 
 export default async function OrderDetailPage({
   params,
@@ -171,242 +65,265 @@ export default async function OrderDetailPage({
   if (!order) notFound();
 
   const currentStep = getStepIndex(order.status);
-  const doneLinePct = Math.max(0, Math.min(100, (currentStep / (ORDER_STEPS.length - 1)) * 100));
-
   const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
-  // ✅ คำนวณราคาสินค้ารวมจากรายการ items จริง แทนการใช้ order.total ตรงๆ
-  // เพื่อให้ตัวเลขในส่วน "สรุปยอด" ตรงกับรายการสินค้าที่แสดงด้านบนเสมอ
+  // คำนวณจากรายการจริง เพื่อให้สรุปยอดตรงกับรายการสินค้าด้านบนเสมอ
   const itemsTotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingFee = calcShippingFee(totalQty);
+  const shippingFee = orderShippingFee(order.total, itemsTotal, totalQty);
+  const cancellable = order.status !== "COMPLETED" && order.status !== "CANCELLED";
 
   return (
-    <main style={{ maxWidth: 960, margin: "0 auto", padding: "40px 24px", fontFamily: "sans-serif" }}>
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <nav className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-500" aria-label="breadcrumb">
+        <Link href="/orders" className="hover:text-brand-600">คำสั่งซื้อของฉัน</Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="text-slate-800">#{order.id}</span>
+      </nav>
 
-      {/* Header — เพิ่มเลขที่สั่งซื้อเข้ามาตรงนี้ */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+      {/* Header */}
+      <div className="mt-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 3 }}>คำสั่งซื้อ</p>
-          <h1 style={{ fontSize: 24, fontWeight: 600, color: "#111", margin: 0 }}>
-            รหัสคำสั่งซื้อ maxelectronics#{order.id}
-          </h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">คำสั่งซื้อ #{order.id}</h1>
+          <p className="mt-1 text-sm text-slate-500">สั่งเมื่อ {dateFmt.format(order.createdAt)}</p>
         </div>
-        <StatusBadge status={order.status} />
+        <OrderStatusBadge status={order.status} large />
       </div>
 
-      {/* Progress Steps */}
-      {order.status !== "CANCELLED" && (
-        <div style={card}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", position: "relative", padding: "0 4px" }}>
-            {/* track bg */}
-            <div style={{ position: "absolute", top: 14, left: 24, right: 24, height: 1, background: "#e5e7eb" }} />
-            {/* track done */}
-            <div style={{ position: "absolute", top: 14, left: 24, height: 1, background: "#3B6D11", width: `calc(${doneLinePct}% - 48px * ${doneLinePct / 100})`, transition: "width .3s" }} />
+      {/* ความคืบหน้า */}
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+        <p className="text-sm font-medium text-slate-700">{STATUS_HINT[order.status] ?? ""}</p>
 
+        {order.status !== "CANCELLED" && (
+          <ol className="mt-5 grid grid-cols-6 gap-1">
             {ORDER_STEPS.map((step, i) => {
               const done = i < currentStep;
               const active = i === currentStep;
               return (
-                <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1, position: "relative" }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: "50%",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 12, fontWeight: 500,
-                    border: "0.5px solid",
-                    background: done ? "#EAF3DE" : active ? "#185FA5" : "#fff",
-                    borderColor: done ? "#97C459" : active ? "#185FA5" : "#e5e7eb",
-                    color: done ? "#27500A" : active ? "#fff" : "#9ca3af",
-                  }}>
-                    {done ? "✓" : i + 1}
+                <li key={step.key} className="flex flex-col items-center gap-2 text-center">
+                  <div className="relative flex w-full items-center justify-center">
+                    {i > 0 && (
+                      <span className={`absolute right-1/2 top-1/2 h-0.5 w-full -translate-y-1/2 ${i <= currentStep ? "bg-brand-600" : "bg-slate-200"}`} />
+                    )}
+                    <span
+                      className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ring-4 ring-white ${
+                        active ? "bg-brand-600 text-white" : done ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-400"
+                      }`}
+                    >
+                      {done ? "✓" : i + 1}
+                    </span>
                   </div>
-                  <p style={{ fontSize: 11, color: (done || active) ? "#111" : "#9ca3af", textAlign: "center", maxWidth: 60, lineHeight: 1.3 }}>
+                  <span className={`text-[11px] sm:text-xs leading-tight ${active ? "font-semibold text-slate-900" : done ? "text-slate-700" : "text-slate-400"}`}>
                     {step.label}
-                  </p>
-                </div>
+                  </span>
+                </li>
               );
             })}
-          </div>
-        </div>
-      )}
+          </ol>
+        )}
 
-      {/* Tracking */}
-      {order.trackingNumber && (
-        <div style={{ background: "#E6F1FB", border: "0.5px solid #85B7EB", borderRadius: 10, padding: "12px 16px", margin: "14px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <p style={{ fontSize: 12, color: "#185FA5", marginBottom: 3 }}>
-              🚚 {order.shippingCompany}
-            </p>
-            <p style={{ fontSize: 17, fontWeight: 500, color: "#0C447C", letterSpacing: "0.04em" }}>
-              {order.trackingNumber}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Main Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.55fr) minmax(0,1fr)", gap: 14, alignItems: "start", marginTop: 14 }}>
-
-        {/* ซ้าย */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-          {/* ข้อมูลจัดส่ง */}
-          <div style={card}>
-            <SectionLabel icon="📍" text="ข้อมูลจัดส่ง" />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, background: "#f9fafb", borderRadius: 8, padding: 14 }}>
-              <InfoItem label="ชื่อผู้รับ" value={order.name} />
-              <InfoItem label="เบอร์โทรศัพท์" value={order.phone} />
-              <div style={{ gridColumn: "1/-1", borderTop: "0.5px solid #e5e7eb", paddingTop: 10, marginTop: 2 }}>
-                <InfoItem label="ที่อยู่จัดส่ง" value={order.address} />
-              </div>
-              {order.note && (
-                <div style={{ gridColumn: "1/-1", borderTop: "0.5px solid #e5e7eb", paddingTop: 10, marginTop: 2 }}>
-                  <p style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4 }}>หมายเหตุ</p>
-                  <p style={{ fontSize: 13, color: "#92400e", background: "#fffbeb", border: "0.5px solid #fde68a", borderRadius: 6, padding: "6px 10px" }}>
-                    {order.note}
-                  </p>
-                </div>
-              )}
+        {order.trackingNumber && (
+          <div className="mt-5 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+            <Truck className="h-5 w-5 shrink-0 text-brand-600" />
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500">{order.shippingCompany || "ขนส่ง"} · เลขพัสดุ</p>
+              <p className="font-mono text-lg font-bold tracking-wider text-slate-900 break-all">{order.trackingNumber}</p>
             </div>
           </div>
+        )}
+      </section>
 
-          {/* รายการสินค้า */}
-          <div style={card}>
-            <SectionLabel icon="📦" text={`รายการสินค้า (${order.items.length})`} />
-            <div>
-              {order.items.map((item, i) => (
-                <div key={item.id} style={{
-                  display: "grid", gridTemplateColumns: "52px minmax(0,1fr) auto",
-                  gap: 12, alignItems: "center", padding: "11px 0",
-                  borderBottom: i < order.items.length - 1 ? "0.5px solid #e5e7eb" : "none",
-                }}>
-                  <a href={item.product.images?.[0]?.imageUrl || "/uploads/no-image.jpg"} target="_blank">
-                    <Image
-                      src={item.product.images?.[0]?.imageUrl || "/uploads/no-image.jpg"}
-                      alt={item.product.name}
-                      width={52}
-                      height={52}
-                      style={{ objectFit: "cover", borderRadius: 8, border: "0.5px solid #e5e7eb", display: "block" }}
-                    />
-                  </a>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>
-                      {item.product.name}
-                    </p>
-                    <p style={{ fontSize: 12, color: "#9ca3af" }}>
-                      {item.quantity} ชิ้น · ฿{item.price.toLocaleString()}/ชิ้น
-                    </p>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: "#111", whiteSpace: "nowrap" }}>
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* ซ้าย */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card icon={Package} title={`รายการสินค้า (${order.items.length})`}>
+            <ul className="divide-y divide-slate-100">
+              {order.items.map((item) => {
+                const img = item.product.images?.[0]?.imageUrl;
+                return (
+                  <li key={item.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                    <Link
+                      href={`/products/${item.product.slug}`}
+                      className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white"
+                    >
+                      {img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={img} alt={item.product.name} className="h-full w-full object-contain p-0.5" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-slate-300">
+                          <ImageOff className="h-5 w-5" />
+                        </div>
+                      )}
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-medium leading-snug text-slate-900">{item.product.name}</p>
+                      <p className="text-xs text-slate-400">฿{item.price.toLocaleString()} × {item.quantity}</p>
+                    </div>
+                    <p className="whitespace-nowrap text-sm font-semibold text-slate-900">
                       ฿{(item.price * item.quantity).toLocaleString()}
                     </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
 
+          <Card icon={MapPin} title="ข้อมูลจัดส่ง">
+            <dl className="grid sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <dt className="text-xs text-slate-500">ชื่อผู้รับ</dt>
+                <dd className="mt-0.5 font-medium text-slate-900">{order.name}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">เบอร์โทรศัพท์</dt>
+                <dd className="mt-0.5 font-medium text-slate-900">{order.phone}</dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-xs text-slate-500">ที่อยู่จัดส่ง</dt>
+                <dd className="mt-0.5 whitespace-pre-line font-medium leading-relaxed text-slate-900">{order.address.trim()}</dd>
+              </div>
+              {order.note && (
+                <div className="sm:col-span-2">
+                  <dt className="text-xs text-slate-500">หมายเหตุ</dt>
+                  <dd className="mt-1 rounded-md bg-amber-50 px-3 py-2 text-amber-900">{order.note}</dd>
+                </div>
+              )}
+            </dl>
+          </Card>
         </div>
 
         {/* ขวา */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-          {/* สรุปยอด */}
-          <div style={card}>
-            <SectionLabel icon="🧾" text="สรุปยอด" />
-            <SumRow label="ราคาสินค้า" value={`฿${itemsTotal.toLocaleString()}`} />
-            <SumRow label={`ค่าจัดส่ง (${totalQty} ชิ้น)`} value={`฿${shippingFee.toLocaleString()}`} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12, marginTop: 2 }}>
-              <span style={{ fontSize: 14, fontWeight: 500, color: "#111" }}>ยอดรวม</span>
-              <span style={{ fontSize: 20, fontWeight: 500, color: "#185FA5" }}>
-                ฿{(itemsTotal + shippingFee).toLocaleString()}
-              </span>
-            </div>
-          </div>
-
-          {/* สลิป */}
-          {order.slip && (
-            <div style={card}>
-              <SectionLabel icon="📎" text="สลิปโอนเงิน" />
-              <div style={{ border: "0.5px solid #e5e7eb", borderRadius: 8, overflow: "hidden", background: "#f9fafb" }}>
-                <Image src={order.slip} alt="สลิป" width={400} height={220} style={{ width: "100%", height: "auto", display: "block", maxHeight: 220, objectFit: "contain" }} />
+        <div className="space-y-6">
+          <Card icon={Receipt} title="สรุปยอด">
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-slate-500">ราคาสินค้า</dt>
+                <dd className="text-slate-900">฿{itemsTotal.toLocaleString()}</dd>
               </div>
+              <div className="flex justify-between">
+                <dt className="text-slate-500">ค่าจัดส่ง ({totalQty} ชิ้น)</dt>
+                <dd className="text-slate-900">฿{shippingFee.toLocaleString()}</dd>
+              </div>
+            </dl>
+            <div className="mt-3 flex items-end justify-between border-t border-slate-200 pt-3">
+              <span className="font-semibold text-slate-900">ยอดรวม</span>
+              <span className="text-2xl font-bold text-brand-600">฿{(itemsTotal + shippingFee).toLocaleString()}</span>
             </div>
+          </Card>
+
+          {order.slip && (
+            <Card icon={ClipboardList} title="สลิปโอนเงิน">
+              <a href={order.slip} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={order.slip} alt="สลิปโอนเงิน" className="mx-auto block max-h-64 w-auto object-contain" />
+              </a>
+            </Card>
           )}
 
-          {/* ศูนย์ช่วยเหลือ */}
-          <div style={card}>
-            <SectionLabel icon="💬" text="ศูนย์ช่วยเหลือ" />
-            {[
-              { label: "จัดส่งแล้ว แต่ยังไม่ได้รับสินค้า" },
-              { label: "แก้ไขที่อยู่จัดส่ง" },
-              { label: "ชำระแล้ว สถานะไม่เปลี่ยน" },
-            ].map((item, i) => (
-              <a key={i} href="https://lin.ee/tC2FJRj" target="_blank" rel="noopener noreferrer"
-                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", border: "0.5px solid #e5e7eb", borderRadius: 8, fontSize: 13, color: "#6b7280", textDecoration: "none", marginBottom: 6 }}>
-                {item.label}
-                <span style={{ fontSize: 16, color: "#d1d5db" }}>›</span>
-              </a>
-            ))}
-          </div>
+          <Card icon={MessageCircle} title="ต้องการความช่วยเหลือ?">
+            <div className="space-y-2">
+              {["จัดส่งแล้ว แต่ยังไม่ได้รับสินค้า", "ต้องการแก้ไขที่อยู่จัดส่ง", "ชำระแล้ว แต่สถานะไม่เปลี่ยน"].map((label) => (
+                <a
+                  key={label}
+                  href={SHOP_LINE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 hover:border-brand-300 hover:text-brand-700"
+                >
+                  {label}
+                  <ChevronRight className="h-4 w-4 text-slate-300" />
+                </a>
+              ))}
+            </div>
+          </Card>
 
-          {/* ยกเลิก */}
-          {order.status !== "COMPLETED" && order.status !== "CANCELLED" && (
-            <div style={{ border: "0.5px solid #F09595", borderRadius: 12, padding: 14, background: "#FCEBEB" }}>
-              <p style={{ fontSize: 12, fontWeight: 500, color: "#791F1F", marginBottom: 8, display: "flex", alignItems: "center", gap: 5 }}>
-                ⚠️ ข้อตกลงการยกเลิก
+          {cancellable && (
+            <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <AlertTriangle className="h-4 w-4 text-amber-500" /> ยกเลิกคำสั่งซื้อ
               </p>
-              <ul style={{ fontSize: 12, color: "#A32D2D", paddingLeft: 14, lineHeight: 1.9 }}>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-500">
                 <li>ไม่คืนเงินทุกกรณี</li>
-                <li>หากจัดส่งแล้ว ยกเลิกไม่ได้</li>
-                <li>ร้านไม่รับผิดชอบความเสียหาย</li>
+                <li>หากจัดส่งแล้ว ไม่สามารถยกเลิกได้</li>
               </ul>
-              <form action={`/api/orders/${order.id}/cancel`} method="POST" style={{ marginTop: 12 }}>
-                <button type="submit" style={{ width: "100%", padding: "10px 0", background: "#fff", border: "0.5px solid #F09595", borderRadius: 8, fontSize: 13, fontWeight: 500, color: "#A32D2D", cursor: "pointer" }}>
-                  ✕ ยกเลิกคำสั่งซื้อ
+              <form action={`/api/orders/${order.id}/cancel`} method="POST" className="mt-3">
+                <button
+                  type="submit"
+                  className="h-10 w-full rounded-lg border border-slate-300 text-sm font-semibold text-slate-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
+                >
+                  ยกเลิกคำสั่งซื้อ
                 </button>
               </form>
             </div>
           )}
-
         </div>
       </div>
 
-      {/* Policy Section — full width below the grid */}
       <PolicySection />
-
     </main>
   );
 }
 
-const card: React.CSSProperties = {
-  background: "#fff",
-  border: "0.5px solid #e5e7eb",
-  borderRadius: 12,
-  padding: "18px 20px",
-};
-
-function SectionLabel({ icon, text }: { icon: string; text: string }) {
+function Card({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <p style={{ fontSize: 12, fontWeight: 500, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
-      {icon} {text}
-    </p>
+    <section className="rounded-xl border border-slate-200 bg-white">
+      <h2 className="flex items-center gap-2 border-b border-slate-100 px-5 py-3.5 text-sm font-semibold text-slate-900">
+        <Icon className="h-4.5 w-4.5 text-brand-600" /> {title}
+      </h2>
+      <div className="p-5">{children}</div>
+    </section>
   );
 }
 
-function InfoItem({ label, value }: { label: string; value: string }) {
+function PolicySection() {
+  return (
+    <details className="group mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+        <span className="flex items-center gap-2">
+          <ShieldCheck className="h-4.5 w-4.5 text-brand-600" /> นโยบายการเปลี่ยน/คืนสินค้า และการรับประกัน
+        </span>
+        <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-90" />
+      </summary>
+
+      <div className="grid gap-4 border-t border-slate-100 p-5 text-sm md:grid-cols-3">
+        <PolicyBlock title="ข้อตกลงการสั่งซื้อและการยกเลิก">
+          <li>คำสั่งซื้อที่ชำระเงินและยืนยันรายการแล้ว ไม่สามารถยกเลิกได้</li>
+          <li>กรณีร้านค้าจัดส่งสินค้าแล้ว จะไม่สามารถยกเลิกคำสั่งซื้อได้</li>
+          <li>ร้านไม่รับผิดชอบความเสียหายจากการใช้งานผิดวิธี การติดตั้งไม่ถูกต้อง หรือเหตุสุดวิสัยหลังได้รับสินค้า</li>
+        </PolicyBlock>
+        <PolicyBlock title="การเปลี่ยนสินค้า">
+          <li>สินค้าเสียจากการผลิต แจ้งเปลี่ยนได้ภายใน 30 วันหลังได้รับสินค้า</li>
+          <li>สินค้าต้องอยู่ในสภาพเดิม บรรจุภัณฑ์และสติกเกอร์รับประกันครบถ้วน</li>
+          <li>หากไม่มีรุ่นเดิม ขอสงวนสิทธิ์คืนเงินหรือเปลี่ยนรุ่นมูลค่าเทียบเท่า</li>
+          <li>ลูกค้ารับผิดชอบค่าส่งสินค้ากลับ · คืนเงินเฉพาะค่าสินค้า</li>
+          <li>ดำเนินการภายใน 7 วันทำการหลังตรวจสอบสินค้า</li>
+        </PolicyBlock>
+        <PolicyBlock title="การรับประกัน (ใหม่ 3 เดือน · มือสอง 1 เดือน)">
+          <li>ครอบคลุมความเสียหายจากตัวสินค้าภายใต้การใช้งานปกติ</li>
+          <li>ไม่ครอบคลุมการใช้งานเกินสเปก ผิดวัตถุประสงค์ หรือดัดแปลง/ซ่อมเอง</li>
+          <li>ไม่ครอบคลุมอุบัติเหตุ ไฟไหม้ น้ำท่วม ไฟฟ้าลัดวงจร ฟ้าผ่า</li>
+          <li>สติกเกอร์รับประกันต้องไม่ชำรุด ฉีกขาด หรือถูกแก้ไข</li>
+        </PolicyBlock>
+        <p className="md:col-span-3 rounded-lg bg-brand-50 px-4 py-3 text-brand-800">
+          <strong>ข้อสงวนสิทธิ์:</strong> ไม่รับเปลี่ยน คืน หรือคืนเงิน กรณีสั่งซื้อผิดรุ่น ผิดสเปก ผิดขนาด หรือผิดประเภทสินค้า
+          กรุณาตรวจสอบรายละเอียดก่อนสั่งซื้อทุกครั้ง
+        </p>
+      </div>
+    </details>
+  );
+}
+
+function PolicyBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 11, color: "#9ca3af", marginBottom: 3 }}>{label}</p>
-      <p style={{ fontSize: 13, fontWeight: 500, color: "#111", lineHeight: 1.5 }}>{value}</p>
-    </div>
-  );
-}
-
-function SumRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#6b7280", padding: "7px 0", borderBottom: "0.5px solid #f3f4f6" }}>
-      <span>{label}</span>
-      <span style={{ color: "#111" }}>{value}</span>
+      <p className="mb-2 font-semibold text-slate-900">{title}</p>
+      <ul className="list-disc space-y-1.5 pl-5 text-slate-600 leading-relaxed">{children}</ul>
     </div>
   );
 }

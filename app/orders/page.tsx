@@ -1,24 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { ChevronRight, ImageOff, Package } from "lucide-react";
+import OrderStatusBadge from "@/components/OrderStatusBadge";
+import { orderShippingFee } from "@/lib/shipping";
 
-function calcShippingFee(totalQty: number): number {
-  if (totalQty <= 2) return 100;
-  return 100 + (totalQty - 2) * 50;
-}
-
-const statusMap: Record<string, { label: string; bg: string; color: string; border: string }> = {
-  PENDING:        { label: "รอชำระเงิน",      bg: "#FAEEDA", color: "#633806", border: "#FAC775" },
-  WAITING_VERIFY: { label: "รอตรวจสลิป",      bg: "#FAEEDA", color: "#633806", border: "#FAC775" },
-  PAID:           { label: "ชำระเงินแล้ว",    bg: "#E6F1FB", color: "#0C447C", border: "#85B7EB" },
-  PREPARING:      { label: "กำลังเตรียมสินค้า", bg: "#E6F1FB", color: "#0C447C", border: "#85B7EB" },
-  SHIPPING:       { label: "กำลังจัดส่ง",     bg: "#E6F1FB", color: "#0C447C", border: "#85B7EB" },
-  COMPLETED:      { label: "จัดส่งสำเร็จ",    bg: "#EAF3DE", color: "#27500A", border: "#97C459" },
-  CANCELLED:      { label: "ยกเลิกแล้ว",      bg: "#FCEBEB", color: "#791F1F", border: "#F09595" },
-};
+const dateFmt = new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Bangkok" });
 
 export default async function OrdersPage() {
   const session = await getServerSession(authOptions);
@@ -38,92 +27,86 @@ export default async function OrdersPage() {
   });
 
   return (
-    <main className="max-w-6xl mx-auto px-6 py-10">
-      <h1 className="text-4xl font-bold mb-8">ประวัติคำสั่งซื้อ</h1>
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">คำสั่งซื้อของฉัน</h1>
+      <p className="mt-1 text-sm text-slate-500">ติดตามสถานะและเลขพัสดุของคำสั่งซื้อทั้งหมด</p>
 
       {orders.length === 0 ? (
-        <div className="border rounded-xl p-6 text-center text-gray-400">
-          ยังไม่มีคำสั่งซื้อ
+        <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+          <Package className="mx-auto h-12 w-12 text-slate-300" />
+          <p className="mt-4 text-base font-semibold text-slate-900">ยังไม่มีคำสั่งซื้อ</p>
+          <Link
+            href="/products"
+            className="mt-6 inline-flex h-11 items-center justify-center rounded-lg bg-brand-600 px-6 text-sm font-semibold text-white hover:bg-brand-700"
+          >
+            เลือกซื้อสินค้า
+          </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <ul className="mt-6 space-y-3">
           {orders.map((order) => {
             const firstItem = order.items[0];
-            const imgSrc =
-              firstItem?.product.images?.[0]?.imageUrl || "/uploads/no-image.jpg";
-
+            const img = firstItem?.product.images?.[0]?.imageUrl;
             const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
-            // ✅ คำนวณราคาสินค้ารวมจากรายการ items จริง แทนการใช้ order.total ตรงๆ
-            // เพื่อให้ยอดรวมตรงกับหน้ารายละเอียดคำสั่งซื้อเสมอ
+            // ใช้ค่าส่งตามที่บันทึกไว้ตอนสั่ง เพื่อให้ตรงกับหน้ารายละเอียดคำสั่งซื้อ
             const itemsTotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
-            const shippingFee = calcShippingFee(totalQty);
-            const grandTotal = itemsTotal + shippingFee;
-
-            const badge = statusMap[order.status] ?? {
-              label: order.status, bg: "#f3f4f6", color: "#6b7280", border: "#d1d5db",
-            };
+            const grandTotal = itemsTotal + orderShippingFee(order.total, itemsTotal, totalQty);
 
             return (
-              <div key={order.id} className="bg-white border rounded-2xl shadow-sm p-5">
-                <div className="flex items-center justify-between gap-4">
+              <li key={order.id}>
+                <Link
+                  href={`/orders/${order.id}`}
+                  className="group block rounded-xl border border-slate-200 bg-white transition-colors hover:border-brand-300"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5">
+                    <p className="text-xs text-slate-500">
+                      <span className="font-semibold text-slate-800">#{order.id}</span>
+                      <span className="mx-1.5">·</span>
+                      {dateFmt.format(order.createdAt)}
+                    </p>
+                    <OrderStatusBadge status={order.status} />
+                  </div>
 
-                  {/* รูป + ข้อมูล */}
-                  <div className="flex gap-4 items-center min-w-0">
-                    <Image
-                      src={imgSrc}
-                      alt={firstItem?.product.name || ""}
-                      width={96}
-                      height={96}
-                      className="w-24 h-24 object-cover rounded-xl border shrink-0"
-                    />
+                  <div className="flex items-center gap-3 sm:gap-4 p-4">
+                    <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                      {img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={img} alt={firstItem?.product.name || ""} className="h-full w-full object-contain p-1" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-slate-50 text-slate-300">
+                          <ImageOff className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
 
-                    <div className="min-w-0">
-                      {/*  วันที่ */}
-                      <h2 className="font-bold text-lg truncate">
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm sm:text-[15px] font-semibold leading-snug text-slate-900">
                         {firstItem?.product.name}
-                      </h2>
-
-                      {order.items.length > 1 && (
-                        <p className="text-gray-400 text-sm">
-                          และอีก {order.items.length - 1} รายการ
+                      </p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {order.items.length > 1 ? `และอีก ${order.items.length - 1} รายการ · ` : ""}
+                        รวม {totalQty} ชิ้น
+                      </p>
+                      {order.trackingNumber && (
+                        <p className="mt-1 text-xs text-slate-600">
+                          เลขพัสดุ: <span className="font-mono font-semibold">{order.trackingNumber}</span>
                         </p>
                       )}
-
-                      {/* Status badge */}
-                      <span style={{
-                        display: "inline-flex", alignItems: "center",
-                        marginTop: 6, fontSize: 12, fontWeight: 500,
-                        padding: "3px 10px", borderRadius: 20,
-                        border: `0.5px solid ${badge.border}`,
-                        background: badge.bg, color: badge.color,
-                      }}>
-                        {badge.label}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* ราคา + ปุ่ม */}
-                  <div className="flex flex-col items-end gap-3 shrink-0">
-                    <div className="text-right">
-                      <p className="text-xs text-gray-400">รวมค่าส่ง</p>
-                      <p className="text-xl font-bold text-green-600">
-                        ฿{grandTotal.toLocaleString()}
-                      </p>
                     </div>
 
-                    <Link
-                      href={`/orders/${order.id}`}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-medium"
-                    >
-                      ดูรายละเอียด
-                    </Link>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <div className="text-right">
+                        <p className="text-[11px] text-slate-400">ยอดรวม</p>
+                        <p className="text-base sm:text-lg font-bold text-slate-900">฿{grandTotal.toLocaleString()}</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-brand-600" />
+                    </div>
                   </div>
-
-                </div>
-              </div>
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </main>
   );

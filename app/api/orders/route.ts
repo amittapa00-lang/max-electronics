@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { calcShippingFee } from "@/lib/shipping";
 
 export async function POST(req: Request) {
   try {
@@ -57,10 +58,7 @@ export async function POST(req: Request) {
       0
     );
 
-    const shippingFee =
-      itemCount <= 2
-        ? 100
-        : 100 + (itemCount - 2) * 50;
+    const shippingFee = calcShippingFee(itemCount);
 
     const total = productTotal + shippingFee;
 

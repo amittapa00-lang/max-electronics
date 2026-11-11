@@ -2,7 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { ImageOff, Pencil } from "lucide-react";
 import ConfirmOrderForm from "@/components/ConfirmOrderForm";
+import BankTransferCard from "@/components/BankTransferCard";
+import CheckoutSteps from "@/components/CheckoutSteps";
+import { calcShippingFee } from "@/lib/shipping";
 
 export default async function CheckoutPage() {
   const session = await getServerSession(authOptions);
@@ -19,156 +24,82 @@ export default async function CheckoutPage() {
   });
   if (cartItems.length === 0) redirect("/cart");
 
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.product.price * item.quantity, 0
-  );
+  const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const shippingFee = itemCount <= 2 ? 100 : 100 + (itemCount - 2) * 50;
+  const shippingFee = calcShippingFee(itemCount);
   const grandTotal = total + shippingFee;
 
   return (
-    <main style={{ maxWidth: 960, margin: "0 auto", padding: "40px 24px", fontFamily: "sans-serif" }}>
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <CheckoutSteps step={2} />
+      <h1 className="mt-6 text-2xl sm:text-3xl font-bold text-slate-900">ที่อยู่จัดส่งและชำระเงิน</h1>
 
-      <p style={{ fontSize: 22, fontWeight: 500, color: "#111", marginBottom: 28 }}>
-        ดำเนินการสั่งซื้อ
-      </p>
-
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.6fr) minmax(0,1fr)", gap: 16, alignItems: "start" }}>
-
-        {/* ซ้าย */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={card}>
-            <SectionLabel icon="📦" text="รายการสินค้า" />
-            <div>
-              {cartItems.map((item, i) => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "60px minmax(0,1fr) auto",
-                    gap: 12,
-                    alignItems: "center",
-                    padding: "12px 0",
-                    borderBottom: i < cartItems.length - 1 ? "0.5px solid #e5e7eb" : "none",
-                  }}
-                >
-                  <img
-                    src={item.product.images?.[0]?.imageUrl || "/uploads/no-image.jpg"}
-                    alt={item.product.name}
-                    style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, border: "0.5px solid #e5e7eb", display: "block" }}
-                  />
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: "#111", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {item.product.name}
-                    </p>
-                    <p style={{ fontSize: 12, color: "#9ca3af" }}>
-                      {item.quantity} ชิ้น · ฿{item.product.price.toLocaleString()}/ชิ้น
-                    </p>
-                  </div>
-                  <p style={{ fontSize: 14, fontWeight: 500, color: "#111", whiteSpace: "nowrap" }}>
-                    ฿{(item.product.price * item.quantity).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-
-          <div style={card}>
-            <SectionLabel icon="📍" text="ข้อมูลจัดส่ง" />
-            <ConfirmOrderForm />
-          </div>
-
-          
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+        {/* ซ้าย: ฟอร์ม */}
+        <div className="lg:col-span-3 rounded-xl border border-slate-200 bg-white p-5 sm:p-6 order-2 lg:order-1">
+          <ConfirmOrderForm />
         </div>
 
-        {/* ขวา */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* ขวา: สรุปยอด + บัญชี */}
+        <div className="lg:col-span-2 space-y-4 order-1 lg:order-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-slate-900">รายการสินค้า ({itemCount} ชิ้น)</h2>
+              <Link href="/cart" className="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700">
+                <Pencil className="h-3.5 w-3.5" /> แก้ไข
+              </Link>
+            </div>
 
-          <div style={card}>
-            <SectionLabel icon="🧾" text="สรุปยอด" />
-            <div style={{ borderTop: "0.5px solid #e5e7eb", paddingTop: 12 }}>
-              <SumRow label="ราคาสินค้า" value={`฿${total.toLocaleString()}`} />
-              <SumRow label={`ค่าจัดส่ง (${itemCount} ชิ้น)`} value={`฿${shippingFee.toLocaleString()}`} />
+            <ul className="mt-3 divide-y divide-slate-100 max-h-72 overflow-y-auto">
+              {cartItems.map((item) => {
+                const img = item.product.images?.[0]?.imageUrl;
+                return (
+                  <li key={item.id} className="flex items-center gap-3 py-3">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                      {img ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={img} alt={item.product.name} className="h-full w-full object-contain p-0.5" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-slate-300">
+                          <ImageOff className="h-5 w-5" />
+                        </div>
+                      )}
+                      <span className="absolute right-0 top-0 min-w-5 rounded-bl-md bg-slate-900 px-1 text-center text-[11px] font-bold leading-5 text-white">
+                        {item.quantity}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-medium leading-snug text-slate-900">{item.product.name}</p>
+                      <p className="text-xs text-slate-400">฿{item.product.price.toLocaleString()} × {item.quantity}</p>
+                    </div>
+                    <p className="whitespace-nowrap text-sm font-semibold text-slate-900">
+                      ฿{(item.product.price * item.quantity).toLocaleString()}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <dl className="mt-3 space-y-2 border-t border-slate-200 pt-3 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-slate-500">ราคาสินค้า</dt>
+                <dd className="text-slate-900">฿{total.toLocaleString()}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-slate-500">ค่าจัดส่ง ({itemCount} ชิ้น)</dt>
+                <dd className="text-slate-900">฿{shippingFee.toLocaleString()}</dd>
+              </div>
+            </dl>
+            <div className="mt-3 flex items-end justify-between border-t border-slate-200 pt-3">
+              <span className="font-semibold text-slate-900">ยอดชำระ</span>
+              <span className="text-2xl font-bold text-brand-600">฿{grandTotal.toLocaleString()}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 14, marginTop: 4 }}>
-              <span style={{ fontSize: 14, fontWeight: 500, color: "#111" }}>ยอดรวม</span>
-              <span style={{ fontSize: 22, fontWeight: 500, color: "#185FA5" }}>
-                ฿{grandTotal.toLocaleString()}
-              </span>
-            </div>
-            <p style={{ fontSize: 11, color: "#9ca3af", textAlign: "right", marginTop: 2 }}>รวม VAT แล้ว</p>
+            <p className="mt-0.5 text-right text-xs text-slate-400">รวม VAT แล้ว</p>
           </div>
 
-          <div style={card}>
-            <SectionLabel icon="🏦" text="บัญชีโอนเงิน" />
-            <BankRow label="ธนาคาร" value="กสิกรไทย" />
-            <BankRow label="ชื่อบัญชี" value="นาง เบญจมาศ ไชยวุฒิภัทร" />
-            <BankRow label="สาขา" value="โรบินสัน สมุทรปราการ" />
-            <div style={{
-              fontSize: 17, fontWeight: 500, color: "#0C447C",
-              background: "#E6F1FB", borderRadius: 8,
-              padding: "10px 14px", textAlign: "center",
-              letterSpacing: "0.04em", margin: "10px 0",
-            }}>
-              241-8-87380-1
-            </div>
-            <img
-              src="/qr-payment-kbank.png"
-              alt="QR พร้อมเพย์ — นาง เบญจมาศ ไชยวุฒิภัทร"
-              style={{ width: "100%", maxWidth: 220, display: "block", margin: "0 auto", borderRadius: 8, border: "0.5px solid #e5e7eb" }}
-            />
-          </div>
-
+          <BankTransferCard amount={grandTotal} />
         </div>
       </div>
-
-     
     </main>
-  );
-}
-
-const card: React.CSSProperties = {
-  background: "#fff",
-  border: "0.5px solid #e5e7eb",
-  borderRadius: 12,
-  padding: "20px",
-};
-
-function SectionLabel({ icon, text }: { icon: string; text: string }) {
-  return (
-    <p style={{
-      fontSize: 12, fontWeight: 500, color: "#9ca3af",
-      textTransform: "uppercase", letterSpacing: "0.05em",
-      marginBottom: 14, display: "flex", alignItems: "center", gap: 6,
-    }}>
-      {icon} {text}
-    </p>
-  );
-}
-
-function SumRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{
-      display: "flex", justifyContent: "space-between",
-      fontSize: 13, color: "#6b7280",
-      padding: "7px 0", borderBottom: "0.5px solid #f3f4f6",
-    }}>
-      <span>{label}</span>
-      <span style={{ color: "#111" }}>{value}</span>
-    </div>
-  );
-}
-
-function BankRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{
-      display: "flex", justifyContent: "space-between", alignItems: "center",
-      fontSize: 13, color: "#9ca3af",
-      padding: "7px 0", borderBottom: "0.5px solid #f3f4f6",
-    }}>
-      <span>{label}</span>
-      <span style={{ color: "#111", fontWeight: 500 }}>{value}</span>
-    </div>
   );
 }

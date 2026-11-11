@@ -11,20 +11,20 @@ export default function ContactPage() {
     <main className="min-h-screen bg-radial from-slate-50 via-slate-100/50 to-slate-200/40 font-sans antialiased text-slate-800 relative overflow-hidden">
       
       {/* Decorative Ambient Light Background */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-250 h-75 bg-linear-to-b from-indigo-500/10 to-transparent blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-250 h-75 bg-linear-to-b from-brand-500/10 to-transparent blur-[120px] pointer-events-none" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-20 md:py-28 relative z-10">
         
         {/* ================= HEADER SECTION ================= */}
         <div className="text-center max-w-2xl mx-auto mb-20 animate-fade-in">
-          <div className="inline-flex items-center gap-2 bg-linear-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-100 px-4 py-1.5 rounded-full backdrop-blur-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-            <span className="text-[11px] font-bold tracking-widest text-indigo-700 uppercase">
+          <div className="inline-flex items-center gap-2 bg-linear-to-r from-brand-500/10 to-brand-500/5 border border-brand-100 px-4 py-1.5 rounded-full backdrop-blur-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-600 animate-pulse" />
+            <span className="text-[11px] font-bold tracking-widest text-brand-700 uppercase">
               Contact Center
             </span>
           </div>
           
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tight mt-5 mb-5 bg-linear-to-b from-slate-950 via-slate-900 to-indigo-950 bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tight mt-5 mb-5 bg-linear-to-b from-slate-950 via-slate-900 to-brand-950 bg-clip-text text-transparent">
             ติดต่อเรา
           </h1>
           <p className="text-sm sm:text-base text-slate-500 leading-relaxed font-medium">
@@ -45,19 +45,19 @@ export default function ContactPage() {
             </div>
 
             {/* 1. PHONE CARD */}
-            <div className="group relative bg-white/80 border border-slate-200/60 rounded-2xl p-4 shadow-xl shadow-slate-100/40 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-2xl hover:shadow-indigo-100/50 flex items-center justify-between">
+            <div className="group relative bg-white/80 border border-slate-200/60 rounded-2xl p-4 shadow-xl shadow-slate-100/40 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-2xl hover:shadow-brand-100/50 flex items-center justify-between">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-indigo-50 to-indigo-100/50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-brand-50 to-brand-100/50 text-brand-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
                   <Phone size={20} className="stroke-[2.2]" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hotline</p>
-                  <a href="tel:0946861981" className="text-base font-bold text-slate-900 mt-0.5 block hover:text-indigo-600 transition-colors">
+                  <a href="tel:0946861981" className="text-base font-bold text-slate-900 mt-0.5 block hover:text-brand-600 transition-colors">
                     094-686-1981
                   </a>
                 </div>
               </div>
-              <a href="tel:0946861981" className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hidden sm:inline-flex items-center gap-1">
+              <a href="tel:0946861981" className="text-[11px] font-bold text-brand-600 bg-brand-50 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hidden sm:inline-flex items-center gap-1">
                 โทรออก <ArrowUpRight size={12} />
               </a>
             </div>
@@ -92,12 +92,12 @@ export default function ContactPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Facebook Page</p>
-                  <a href="https://facebook.com/MaxTech Electric/" target="_blank" rel="noopener noreferrer" className="text-base font-bold text-slate-900 mt-0.5 block hover:text-blue-600 transition-colors truncate">
+                  <a href="https://www.facebook.com/profile.php?id=61591176506538" target="_blank" rel="noopener noreferrer" className="text-base font-bold text-slate-900 mt-0.5 block hover:text-blue-600 transition-colors truncate">
                     MaxTech Electric
                   </a>
                 </div>
               </div>
-              <a href="https://facebook.com/MaxTech Electric/" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-100/60 px-3 py-1.5 rounded-full flex items-center gap-1 shadow-xs hover:bg-blue-100 transition-colors shrink-0 ml-2">
+              <a href="https://www.facebook.com/profile.php?id=61591176506538" target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-100/60 px-3 py-1.5 rounded-full flex items-center gap-1 shadow-xs hover:bg-blue-100 transition-colors shrink-0 ml-2">
                 เปิดเพจ <ArrowUpRight size={12} />
               </a>
             </div>
@@ -134,19 +134,19 @@ export default function ContactPage() {
 </div>
 
             {/* 5. EMAIL CARD */}
-            <div className="group relative bg-white/80 border border-slate-200/60 rounded-2xl p-4 shadow-xl shadow-slate-100/40 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-2xl hover:shadow-indigo-100/50 flex items-center justify-between">
+            <div className="group relative bg-white/80 border border-slate-200/60 rounded-2xl p-4 shadow-xl shadow-slate-100/40 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-2xl hover:shadow-brand-100/50 flex items-center justify-between">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-indigo-50 to-indigo-100/50 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-brand-50 to-brand-100/50 text-brand-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300">
                   <Mail size={20} className="stroke-[2.2]" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</p>
-                  <a href="mailto:maxtechelectric1@gmail.com" className="text-sm sm:text-base font-bold text-slate-900 mt-0.5 block hover:text-indigo-600 transition-colors truncate">
+                  <a href="mailto:maxtechelectric1@gmail.com" className="text-sm sm:text-base font-bold text-slate-900 mt-0.5 block hover:text-brand-600 transition-colors truncate">
                     maxtechelectric1@gmail.com
                   </a>
                 </div>
               </div>
-              <a href="mailto:maxtechelectric1@gmail.com" className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hidden sm:inline-flex items-center gap-1">
+              <a href="mailto:maxtechelectric1@gmail.com" className="text-[11px] font-bold text-brand-600 bg-brand-50 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hidden sm:inline-flex items-center gap-1">
                 ส่งเมล <ArrowUpRight size={12} />
               </a>
             </div>
@@ -154,11 +154,11 @@ export default function ContactPage() {
 
           {/* RIGHT SIDE: BUSINESS HOURS & MAP (5 Columns) */}
           <div className="md:col-span-5 bg-linear-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-slate-950/20 text-white space-y-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 blur-3xl pointer-events-none" />
             
             {/* เวลาทำการ */}
             <div>
-              <h3 className="text-[11px] font-bold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <h3 className="text-[11px] font-bold text-brand-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <Clock size={14} className="stroke-[2.5]" />
                 Business Hours
               </h3>
@@ -178,7 +178,7 @@ export default function ContactPage() {
 
             {/* ที่อยู่สำนักงาน */}
             <div>
-              <h3 className="text-[11px] font-bold text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <h3 className="text-[11px] font-bold text-brand-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <MapPin size={14} className="stroke-[2.5]" />
                 Headquarters
               </h3>
@@ -194,7 +194,7 @@ export default function ContactPage() {
                     href="https://maps.google.com/?q=13.558246,100.594413"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-3.5 px-4 rounded-xl transition-all duration-300 shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30"
+                    className="group flex items-center justify-center gap-2 w-full bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs py-3.5 px-4 rounded-xl transition-all duration-300 shadow-lg shadow-brand-600/20 hover:shadow-brand-500/30"
                   >
                     เปิดแผนที่ Google Maps
                     <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

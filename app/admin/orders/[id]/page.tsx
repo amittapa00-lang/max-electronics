@@ -3,11 +3,8 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import AdminShippingForm from "@/components/AdminShippingForm";
+import { orderShippingFee } from "@/lib/shipping";
 
-function calcShippingFee(totalQty: number): number {
-  if (totalQty <= 2) return 100;
-  return 100 + (totalQty - 2) * 50;
-}
 
 const STATUS_FLOW = [
   "PENDING",
@@ -61,7 +58,7 @@ export default async function AdminOrderDetailPage({
   const status = statusMap[order.status as keyof typeof statusMap];
   const total = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
-  const shippingFee = calcShippingFee(totalQty);
+  const shippingFee = orderShippingFee(order.total, total, totalQty);
   const grandTotal = total + shippingFee;
 
   const isCancelled = order.status === "CANCELLED";

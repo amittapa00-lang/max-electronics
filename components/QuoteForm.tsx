@@ -141,7 +141,7 @@ export default function QuoteForm({
   };
 
   const inputClass =
-    "w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder:text-gray-400";
+    "w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm placeholder:text-gray-400";
   const labelClass = "text-sm font-semibold text-gray-700";
 
   return (
@@ -157,7 +157,7 @@ export default function QuoteForm({
               name="customerType"
               checked={customerType === "individual"}
               onChange={() => setCustomerType("individual")}
-              className="h-4 w-4 accent-blue-600"
+              className="h-4 w-4 accent-brand-600"
             />
             <span className="text-sm text-gray-800">บุคคลธรรมดา</span>
           </label>
@@ -168,7 +168,7 @@ export default function QuoteForm({
               name="customerType"
               checked={customerType === "juristic"}
               onChange={() => setCustomerType("juristic")}
-              className="h-4 w-4 accent-blue-600"
+              className="h-4 w-4 accent-brand-600"
             />
             <span className="text-sm text-gray-800">นิติบุคคล</span>
           </label>

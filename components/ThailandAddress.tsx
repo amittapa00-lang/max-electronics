@@ -152,7 +152,7 @@ zipcode,
 onChange,
 ]);
 
-return ( <div className="grid md:grid-cols-2 gap-4">
+return ( <div className="grid sm:grid-cols-2 gap-3">
 <select
 value={province}
 onChange={(e) => {
@@ -162,7 +162,7 @@ e.target.value
 setDistrict("");
 setSubdistrict("");
 }}
-className="border p-3 rounded-xl"
+className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15"
 > <option value="">
 เลือกจังหวัด </option>
 
@@ -190,7 +190,7 @@ className="border p-3 rounded-xl"
       setSubdistrict("");
     }}
     disabled={!province}
-    className="border p-3 rounded-xl"
+    className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15"
   >
     <option value="">
       เลือกอำเภอ / เขต
@@ -218,7 +218,7 @@ className="border p-3 rounded-xl"
       )
     }
     disabled={!district}
-    className="border p-3 rounded-xl"
+    className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15"
   >
     <option value="">
       เลือกตำบล / แขวง
@@ -242,12 +242,7 @@ className="border p-3 rounded-xl"
     value={zipcode}
     readOnly
     placeholder="รหัสไปรษณีย์"
-    className="
-      border
-      p-3
-      rounded-xl
-      bg-gray-100
-    "
+    className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 px-3 text-sm text-slate-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15"
   />
 </div>
 

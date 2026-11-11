@@ -68,7 +68,7 @@ export default async function QuoteRequestPage({
 </p>
             {product.quotationOnly ? (
 
-  <div className="mt-4 text-2xl font-bold text-blue-600">
+  <div className="mt-4 text-2xl font-bold text-brand-600">
     📄 ขอใบเสนอราคา
   </div>
 

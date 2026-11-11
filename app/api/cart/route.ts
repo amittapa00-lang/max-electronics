@@ -131,3 +131,27 @@ export async function POST(
     );
   }
 }
+// จำนวนสินค้าในตะกร้า (ใช้แสดงตัวเลขบนไอคอนตะกร้าที่ Navbar)
+export async function GET() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.email) {
+    return NextResponse.json({ count: 0 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true },
+  });
+
+  if (!user) {
+    return NextResponse.json({ count: 0 });
+  }
+
+  const result = await prisma.cartItem.aggregate({
+    where: { userId: user.id },
+    _sum: { quantity: true },
+  });
+
+  return NextResponse.json({ count: result._sum.quantity ?? 0 });
+}

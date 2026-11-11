@@ -32,13 +32,13 @@ export default function AboutPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              background: "#EFF6FF",
-              color: "#2563EB",
+              background: "#FEF2F2",
+              color: "#D71920",
               fontSize: 12,
               fontWeight: 500,
               padding: "5px 14px",
               borderRadius: 100,
-              border: "0.5px solid #BFDBFE",
+              border: "0.5px solid #FECACA",
               marginBottom: "1.25rem",
             }}
           >
@@ -58,7 +58,7 @@ export default function AboutPage() {
           >
             MaxTech Electric
             <br />
-            <span style={{ color: "#2563EB" }}>อุปกรณ์อุตสาหกรรม</span>ครบวงจร
+            <span style={{ color: "#D71920" }}>อุปกรณ์อุตสาหกรรม</span>ครบวงจร
           </h1>
 
           <p
@@ -93,7 +93,7 @@ export default function AboutPage() {
                   gap: 6,
                 }}
               >
-                <span style={{ fontSize: 18, fontWeight: 500, color: "#2563EB" }}>{s.value}</span>
+                <span style={{ fontSize: 18, fontWeight: 500, color: "#D71920" }}>{s.value}</span>
                 <span style={{ fontSize: 12, color: "#9CA3AF" }}>{s.label}</span>
               </div>
             ))}
@@ -109,7 +109,7 @@ export default function AboutPage() {
             marginBottom: "2rem",
           }}
         >
-          <div style={{ background: "#2563EB", borderRadius: 16, padding: "1.75rem", color: "#fff" }}>
+          <div style={{ background: "#D71920", borderRadius: 16, padding: "1.75rem", color: "#fff" }}>
             <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(255,255,255,.55)", marginBottom: "0.75rem" }}>
               วิสัยทัศน์
             </p>
@@ -199,7 +199,7 @@ export default function AboutPage() {
               icon={<Mail size={16} />}
               label="อีเมล"
               value={
-                <a href="mailto:maxtechelectric1@gmail.com" style={{ color: "#2563EB", textDecoration: "none" }}>
+                <a href="mailto:maxtechelectric1@gmail.com" style={{ color: "#D71920", textDecoration: "none" }}>
                   maxtechelectric1@gmail.com
                 </a>
               }
@@ -210,7 +210,7 @@ export default function AboutPage() {
               label="ที่อยู่"
               value="ถนนท้ายบ้าน ตำบลท้ายบ้าน อำเภอเมืองสมุทรปราการ จังหวัดสมุทรปราการ 10280"
               sub={
-                <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" style={{ color: "#2563EB", textDecoration: "underline" }}>
+                <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" style={{ color: "#D71920", textDecoration: "underline" }}>
                   ดูแผนที่และเส้นทาง
                 </a>
               }
@@ -243,7 +243,7 @@ function Divider() {
 function FeatureCard({ icon, title, desc }: { icon: ReactNode; title: string; desc: string }) {
   return (
     <div style={{ background: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "1.25rem" }}>
-      <div style={{ width: 36, height: 36, borderRadius: 8, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563EB", marginBottom: "0.75rem" }}>
+      <div style={{ width: 36, height: 36, borderRadius: 8, background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", color: "#D71920", marginBottom: "0.75rem" }}>
         {icon}
       </div>
       <h3 style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>{title}</h3>
@@ -255,7 +255,7 @@ function FeatureCard({ icon, title, desc }: { icon: ReactNode; title: string; de
 function ContactCard({ icon, label, value, sub }: { icon: ReactNode; label: string; value: ReactNode; sub: ReactNode }) {
   return (
     <div style={{ background: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "1.1rem 1.25rem", display: "flex", gap: 12, alignItems: "flex-start" }}>
-      <div style={{ width: 32, height: 32, borderRadius: 8, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563EB", flexShrink: 0 }}>
+      <div style={{ width: 32, height: 32, borderRadius: 8, background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", color: "#D71920", flexShrink: 0 }}>
         {icon}
       </div>
       <div>

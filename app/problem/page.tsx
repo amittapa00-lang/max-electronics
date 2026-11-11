@@ -60,7 +60,7 @@ export default function ProblemPage() {
           >
             แจ้งปัญหา &amp; เคลมสินค้า
             <br />
-            <span style={{ color: "#2563EB" }}>เราพร้อมดูแลคุณทันที</span>
+            <span style={{ color: "#D71920" }}>เราพร้อมดูแลคุณทันที</span>
           </h1>
           <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.7, maxWidth: 540, margin: "0 auto" }}>
             ได้รับสินค้าชำรุด เสียหาย หรือไม่ตรงตามคำสั่งซื้อ?
@@ -160,8 +160,8 @@ export default function ProblemPage() {
           <SectionHead title="บริการหลังการขายที่มั่นใจได้" />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 12 }}>
 
-            <PolicyCard icon={<RefreshCw size={18} />} iconBg="#EFF6FF" iconColor="#2563EB" title="เปลี่ยน / คืนสินค้า">
-              <BulletList color="#2563EB" items={[
+            <PolicyCard icon={<RefreshCw size={18} />} iconBg="#FEF2F2" iconColor="#D71920" title="เปลี่ยน / คืนสินค้า">
+              <BulletList color="#D71920" items={[
                 "แจ้งเคลมเปลี่ยนตัวใหม่ได้ภายใน 30 วัน",
                 "สินค้าและแพ็กเกจต้องอยู่ในสภาพเดิม",
                 "ลูกค้ารับผิดชอบค่าจัดส่งสินค้าคืน",
@@ -198,18 +198,18 @@ export default function ProblemPage() {
               ]} />
             </PolicyCard>
 
-            <PolicyCard icon={<Truck size={18} />} iconBg="#EFF6FF" iconColor="#2563EB" title="ค่าจัดส่งสำหรับการเคลม">
-              <BulletList color="#2563EB" items={[
-                "1–2 ชิ้นแรก เหมา 100 บาท ทั่วไทย",
+            <PolicyCard icon={<Truck size={18} />} iconBg="#FEF2F2" iconColor="#D71920" title="ค่าจัดส่งสำหรับการเคลม">
+              <BulletList color="#D71920" items={[
+                "1–2 ชิ้นแรก เหมา 50 บาท ทั่วไทย",
                 "ชิ้นถัดไปเพิ่มชิ้นละ 50 บาท",
               ]} />
             </PolicyCard>
 
-            <PolicyCard icon={<Package size={18} />} iconBg="#EFF6FF" iconColor="#2563EB" title="ติดตามพัสดุเคลม">
+            <PolicyCard icon={<Package size={18} />} iconBg="#FEF2F2" iconColor="#D71920" title="ติดตามพัสดุเคลม">
               <p style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.55, marginBottom: "0.75rem" }}>
                 เมื่อส่งสินค้าทดแทนให้แล้ว สามารถตรวจสถานะและเลขแทร็กกิ้งได้ทางหน้าเว็บหรือแจ้งขอจากแอดมิน
               </p>
-              <a href="#" style={{ fontSize: 13, color: "#2563EB", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+              <a href="#" style={{ fontSize: 13, color: "#D71920", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
                 ตรวจสอบสถานะ <ArrowRight size={13} />
               </a>
             </PolicyCard>
@@ -285,7 +285,7 @@ export default function ProblemPage() {
               { title: "จัดส่งชิ้นใหม่", desc: "ร้านส่งสินค้าทดแทนให้ทันที" },
             ].map((step, i) => (
               <div key={step.title} style={{ padding: "1.25rem 1rem", borderRight: i < 3 ? "0.5px solid #E5E7EB" : "none" }}>
-                <div style={{ width: 36, height: 36, background: "#EFF6FF", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 500, color: "#2563EB", marginBottom: "0.75rem" }}>
+                <div style={{ width: 36, height: 36, background: "#FEF2F2", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 500, color: "#D71920", marginBottom: "0.75rem" }}>
                   {i + 1}
                 </div>
                 <h3 style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{step.title}</h3>
@@ -362,7 +362,7 @@ interface PrepCardProps {
 function PrepCard({ icon, title, desc }: PrepCardProps) {
   return (
     <div style={{ background: "#fff", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "1.25rem", display: "flex", gap: 12, alignItems: "flex-start" }}>
-      <div style={{ width: 38, height: 38, borderRadius: 8, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#2563EB" }}>
+      <div style={{ width: 38, height: 38, borderRadius: 8, background: "#FEF2F2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#D71920" }}>
         {icon}
       </div>
       <div>

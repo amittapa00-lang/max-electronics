@@ -1,569 +1,335 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Cpu,
+  FileText,
+  Gauge,
+  Headset,
+  LayoutGrid,
+  Lightbulb,
+  Phone,
+  RotateCcw,
+  ShieldCheck,
+  ToggleLeft,
+  Truck,
+  Wrench,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
+import ProductCard, { type ProductBadge, type ProductCardData } from "@/components/ProductCard";
+import { LineIcon, SHOP_LINE_URL, SHOP_PHONE, SHOP_PHONE_TEL } from "@/components/SocialIcons";
 
-// ป้องกันไม่ให้ Next.js cache หน้านี้แบบ static ตอน build
-// ทำให้ทุกครั้งที่มีคนเข้าหน้าแรก จะดึงข้อมูลสินค้าล่าสุดจาก DB เสมอ
-// (แก้ปัญหาสินค้าที่ถูกลบไปแล้ว ยังค้างแสดงอยู่ที่หน้าแรก)
+// ดึงข้อมูลสดทุกครั้ง (กันสินค้าที่ถูกลบแล้วค้างอยู่ที่หน้าแรก)
 export const dynamic = "force-dynamic";
 
+const productInclude = { category: { include: { parent: true } }, images: true } as const;
+
 export default async function Home() {
-  // ดึงข้อมูลจริงโดยอิงจากความสัมพันธ์ใน schema.prisma
   const twentyDaysAgo = new Date();
   twentyDaysAgo.setDate(twentyDaysAgo.getDate() - 20);
 
-  const [latestProducts, bestSellingProducts, recommendedProducts] = await Promise.all([
-    // 1. สินค้าล่าสุด: เฉพาะสินค้าที่เพิ่มภายใน 20 วันล่าสุด
-    prisma.product.findMany({
-      take: 8,
-      where: { createdAt: { gte: twentyDaysAgo } },
-      orderBy: { createdAt: "desc" },
-      include: { category: true, images: true },
-    }),
+  const available = { OR: [{ quotationOnly: true }, { stock: { gt: 0 } }] };
 
-    // 2. สินค้าขายดี: ใช้ field sold (จำนวนที่ขายได้จริง) เรียงจากมากไปน้อย
-    // นับรวมทั้งสินค้าที่มีสต็อกปกติ และสินค้าประเภทใบเสนอราคา (quotationOnly)
-    prisma.product.findMany({
-      take: 8,
-      where: {
-        sold: { gt: 0 },
-        OR: [{ quotationOnly: true }, { stock: { gt: 0 } }],
-      },
-      orderBy: { sold: "desc" },
-      include: { category: true, images: true },
-    }),
+  const [latestProducts, bestSellingProducts, recommendedProducts, readyProducts, categories] =
+    await Promise.all([
+      prisma.product.findMany({
+        take: 10,
+        where: { createdAt: { gte: twentyDaysAgo } },
+        orderBy: { createdAt: "desc" },
+        include: productInclude,
+      }),
+      prisma.product.findMany({
+        take: 10,
+        where: { sold: { gt: 0 }, ...available },
+        orderBy: { sold: "desc" },
+        include: productInclude,
+      }),
+      prisma.product.findMany({
+        take: 10,
+        where: { isRecommended: true, ...available },
+        orderBy: { updatedAt: "desc" },
+        include: productInclude,
+      }),
+      // สินค้าที่มีราคาและพร้อมส่ง — แสดงเสมอเพื่อให้หน้าแรกมีสินค้าให้เลือก
+      prisma.product.findMany({
+        take: 10,
+        where: { quotationOnly: false, stock: { gt: 0 } },
+        orderBy: { updatedAt: "desc" },
+        include: productInclude,
+      }),
+      prisma.category.findMany({
+        where: { parentId: null },
+        include: {
+          _count: { select: { products: true } },
+          children: { include: { _count: { select: { products: true } } } },
+        },
+        orderBy: [{ order: "asc" }, { name: "asc" }],
+      }),
+    ]);
 
-    // 3. สินค้าแนะนำ: คัดจากสินค้าที่ตั้งค่า isRecommended = true
-    // รวมทั้งสินค้าที่มีราคาปกติ และสินค้าประเภทใบเสนอราคา (quotationOnly)
-    prisma.product.findMany({
-      take: 8,
-      where: {
-        isRecommended: true,
-        OR: [{ quotationOnly: true }, { stock: { gt: 0 } }],
-      },
-      orderBy: { updatedAt: "desc" },
-      include: { category: true, images: true },
-    }),
-  ]);
+  const categoryTiles = categories
+    .map((c) => ({
+      name: c.name,
+      count: c._count.products + c.children.reduce((s, ch) => s + ch._count.products, 0),
+    }))
+    .filter((c) => c.count > 0)
+    .slice(0, 8);
 
   return (
-    <main className="bg-slate-50/50 min-h-screen font-sans">
-
-      {/* ─── 1. HERO SECTION (Optimized for SEO) ─── */}
-      <section className="relative w-full min-h-125 lg:min-h-137.5 overflow-hidden flex items-center bg-slate-950 py-10 lg:py-0">
+    <main>
+      {/* ─── HERO ─── */}
+      <section className="relative overflow-hidden bg-white border-b border-slate-200">
         <Image
-          src="/banner_.png"
+          src="/banner_red.png"
           alt="MaxTech Electric - แหล่งรวมอุปกรณ์ไฟฟ้าอุตสาหกรรม PLC Inverter Sensor"
           fill
           priority
-          className="object-cover object-center opacity-40 lg:opacity-60"
           sizes="100vw"
+          className="object-cover object-center"
         />
-        <div className="absolute inset-0 bg-linear-to-r from-slate-950/95 via-slate-950/80 to-slate-950/40 lg:to-transparent" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-
-          {/* โซนซ้าย: สโลแกนหลักและปุ่มแอคชัน */}
-          <div className="lg:col-span-7 text-center lg:text-left">
-            <span className="inline-block bg-blue-600 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full mb-4 shadow-md">
-              Industrial Electronics &amp; Automation
-            </span>
-            {/* SEO Fix: ใช้ h1 ชัดเจนพร้อมแบรนด์และ Keyword หลัก */}
-            <h1 className="text-3xl sm:text-5xl font-black text-white leading-tight mb-3 tracking-tight">
-              MaxTech Electric <span className="block text-xl sm:text-2xl text-blue-400 font-semibold mt-1">ศูนย์รวมอุปกรณ์ไฟฟ้าอุตสาหกรรม ครบวงจร</span>
+        <div className="relative max-w-7xl mx-auto px-6 sm:px-10 lg:px-20 py-12 sm:py-14 lg:py-16">
+          <div className="max-w-2xl">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900">
+              Max<span className="text-brand-600">Tech</span> Electric
+              <span className="mt-2 block text-xl sm:text-2xl font-semibold text-brand-600">
+                ศูนย์รวมอุปกรณ์ไฟฟ้าอุตสาหกรรม <span className="whitespace-nowrap">ครบวงจร</span>
+              </span>
             </h1>
-            <p className="text-rose-400 text-sm sm:text-lg font-bold mb-4 leading-snug">
-              จำหน่ายอุปกรณ์ไฟฟ้า อิเล็กทรอนิกส์ ออโตเมชั่น มือหนึ่ง มือสอง ทุกชนิด อาทิ PLC, Sensor, Inverter และ Breaker
+
+            <p className="mt-4 max-w-xl text-base sm:text-lg leading-relaxed text-slate-600">
+              PLC, Sensor, Inverter, Breaker มือหนึ่ง มือสอง พร้อมวิศวกรให้คำปรึกษา
             </p>
-            <p className="text-slate-300 text-xs sm:text-sm max-w-xl leading-relaxed mb-6 hidden sm:block">
-              ยินดีต้อนรับสู่ www.maxtechelectric.com แหล่งรวมอุปกรณ์ควบคุมโรงงานและระบบอัตโนมัติประสิทธิภาพสูง
-              ไม่ว่าจะเป็น PLC, Sensor, Inverter, Breaker สินค้าผ่านการคัดสรรและตรวจสอบมาตรฐาน พร้อมทีมงานวิศวกรให้คำแนะนำด้านเทคนิค
-            </p>
-            <div className="flex flex-wrap justify-center lg:justify-start gap-3">
-              <Link href="/products" className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-600/20 transition-all active:scale-98">
-                ดูสินค้าทั้งหมด
-              </Link>
+
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <Link
-                href="/contact"
-                className="bg-white/10 hover:bg-white/15 text-white border border-white/20 text-xs sm:text-sm font-medium px-6 py-2.5 rounded-xl backdrop-blur-xs transition-all inline-flex items-center gap-2"
+                href="/products"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-600 px-7 text-base font-semibold text-white shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-colors"
               >
-                ติดต่อเรา
+                ดูสินค้าทั้งหมด <ArrowRight className="h-4 w-4" />
               </Link>
+              <a
+                href={SHOP_LINE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-6 text-base font-semibold text-slate-800 hover:border-brand-600 hover:text-brand-700 transition-colors"
+              >
+                <LineIcon className="h-5 w-5 text-[#06C755]" /> สอบถามราคา / สเปก
+              </a>
             </div>
           </div>
-
-          {/* โซนขวา: กล่องข้อมูลติดต่อด่วน + ป้ายหมวดหมู่สินค้า */}
-          <div className="lg:col-span-5 bg-slate-900/75 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-white/10 shadow-2xl space-y-4">
-
-            {/* รายละเอียดช่องทางติดต่อ */}
-            <div className="flex gap-4 items-center bg-white/5 rounded-xl p-3 border border-white/5">
-              {/* LINE QR Code */}
-              <div className="flex flex-col items-center shrink-0 bg-white p-1.5 rounded-lg">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 relative overflow-hidden rounded">
-                  <Image src="/line-qr.jpg" alt="LINE QR Code" fill className="object-cover" />
-                </div>
-                <span className="bg-[#22c55e] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full mt-1">LINE ID</span>
-              </div>
-
-              {/* ข้อมูลการติดต่อทั้งหมดแบบคลิกได้จริง */}
-              <div className="text-white text-xs space-y-2.5 w-full overflow-hidden">
-                <p className="font-bold text-blue-400 text-[10px] tracking-wider uppercase pl-0.5">Contact Center</p>
-
-                {/* 1. เบอร์โทร */}
-                <a href="tel:0946861981" className="flex items-center gap-2 hover:text-blue-400 transition-colors group">
-                  <span className="text-slate-400 text-sm w-4 text-center group-hover:scale-110 transition-transform">📞</span>
-                  <span className="font-medium text-slate-200 group-hover:text-blue-400 truncate">094-686-1981</span>
-                </a>
-
-                {/* 2. LINE */}
-                <a href="https://line.me/R/ti/p/@067rvfqe" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-[#22c55e] transition-colors group">
-                  <div className="w-4 h-4 shrink-0 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <svg viewBox="0 0 24 24" fill="#22c55e" className="w-full h-full">
-                      <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738s-12 4.369-12 9.738c0 4.814 4.269 8.846 10.036 9.564.39.084.922.258 1.057.592.12.313.079.803.039 1.121l-.171 1.027c-.052.31-.241 1.217 1.042.665 1.284-.553 6.923-4.077 9.441-6.976 1.733-1.859 2.556-3.896 2.556-6.013zm-16.945 3.328c0 .225-.183.407-.407.407h-1.341c-.225 0-.407-.182-.407-.407v-3.725c0-.225.182-.407.407-.407.225 0 .407.182.407.407v3.318h1.341c.224 0 .407.182.407.407zm2.254 0c0 .225-.183.407-.408.407h-.001c-.225 0-.407-.182-.407-.407v-3.725c0-.225.182-.407.407-.407.225 0 .408.182.408.407v3.725zm3.824 0c0 .167-.101.318-.255.381-.05.021-.102.031-.153.031-.109 0-.214-.044-.29-.124l-1.637-1.722v1.432c0 .225-.182.407-.407.407s-.407-.182-.407-.407v-3.725c0-.167.101-.318.255-.381.154-.063.332-.027.449.091l1.625 1.708v-1.417c0-.225.182-.407.407-.407s.407.182.407.407v3.725zm2.973-1.124c0 .225-.183.407-.407.407h-1.353v.717h1.353c.225 0 .407.182.407.407 0 .225-.182.407-.407.407h-1.761c-.224 0-.407-.182-.407-.407v-3.725c0-.225.183-.407.407-.407h1.761c.225 0 .407.182.407.407 0 .225-.182.407-.407.407h-1.353v.673h1.353c.225 0 .407.182.407.407z"/>
-                    </svg>
-                  </div>
-                  <span className="font-medium text-slate-200 group-hover:text-[#22c55e]">@067rvfqe</span>
-                </a>
-
-                {/* 3. Facebook */}
-                <a
-                  href="https://www.facebook.com/profile.php?id=61591176506538"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:text-[#1877f2] transition-colors group"
-                >
-                  <div className="w-4 h-4 shrink-0 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <svg viewBox="0 0 24 24" fill="#1877f2" className="w-full h-full">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                    </svg>
-                  </div>
-                  <span className="text-slate-200 group-hover:text-[#1877f2] truncate">
-                    MaxTech Electric
-                  </span>
-                </a>
-
-                {/* 4. ig */}
-                <a
-                   href="https://www.instagram.com/maxtechelectric/"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="flex items-center gap-2 hover:text-[#E4405F] transition-colors group"
-                >
-  <div className="w-4 h-4 shrink-0 flex items-center justify-center group-hover:scale-110 transition-transform">
-    <svg viewBox="0 0 24 24" className="w-full h-full">
-      <defs>
-        <linearGradient id="ig-gradient" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#FFDD55" />
-          <stop offset="30%" stopColor="#FF543E" />
-          <stop offset="65%" stopColor="#C837AB" />
-          <stop offset="100%" stopColor="#7638FA" />
-        </linearGradient>
-      </defs>
-      <path
-        fill="url(#ig-gradient)"
-        d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
-      />
-    </svg>
-  </div>
-  <span className="text-slate-200 group-hover:text-[#E4405F] truncate">
-    MaxTech Electric
-  </span>
-</a>
-
-                {/* 5. อีเมล */}
-                <a href="mailto:maxtechelectric1@gmail.com" className="flex items-center gap-2 text-[11px] text-slate-400 hover:text-rose-400 transition-colors group">
-                  <span className="text-xs w-4 text-center group-hover:scale-110 transition-transform">✉️</span>
-                  <span className="truncate group-hover:text-rose-400">maxtechelectric1@gmail.com</span>
-                </a>
-              </div>
-            </div>
-
-            
-
-            {/* เบอร์โทรศัพท์ฝ่ายเทคนิคเฉพาะทาง */}
-            <a href="tel:0946861981" className="block bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 rounded-xl px-3 py-1.5 transition-colors">
-              <div className="flex items-center gap-2 text-[11px] font-medium text-amber-300">
-                <span>🔧</span>
-                <span>ปรึกษาข้อมูลเทคนิค อุปกรณ์ไฟฟ้า PLC Inverter: 094-686-1981</span>
-              </div>
-            </a>
-
-            {/* แถบหมวดหมู่สินค้า 6 สี */}
-            <div className="space-y-2">
-              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest pl-1">Main Categories</p>
-              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                {[
-                  { title: "PLC", color: "from-orange-500 to-orange-600" },
-                  { title: "Inverter", color: "from-amber-400 to-amber-500" },
-                  { title: "SERVO", color: "from-emerald-500 to-emerald-600" },
-                  { title: "MOTOR", color: "from-red-500 to-red-600" },
-                  { title: "SENSOR", color: "from-purple-500 to-purple-600" },
-                  { title: "Breaker", color: "from-blue-600 to-indigo-600" }, // ปรับให้มี Breaker ตามคีย์เวิร์ด
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    className={`bg-linear-to-r ${item.color} text-white font-black text-center text-[10px] sm:text-xs py-2 rounded-lg shadow-xs border-b-2 border-black/20 select-none`}
-                  >
-                    {item.title}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-          </div>
-
         </div>
       </section>
 
-      {/* ─── 2. FEATURE STRIP ─── */}
-      <section className="bg-slate-900 border-y border-slate-800 py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap justify-center gap-x-12 gap-y-2">
+      {/* ─── จุดเด่นร้าน ─── */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-slate-100">
           {[
-            { icon: "⚡", label: "จัดส่งทั่วประเทศ" },
-            { icon: "🛡️", label: "สินค้ารับประกัน" },
-            { icon: "📞", label: "ทีมงานผู้เชี่ยวชาญ" },
-            { icon: "🔧", label: "บริการหลังการขาย" },
+            { icon: BadgeCheck, title: "สินค้าแท้ 100%", sub: "คัดสรรจากตัวแทนจำหน่าย" },
+            { icon: Truck, title: "จัดส่งทั่วประเทศ", sub: "ส่งภายใน 1–3 วันทำการ" },
+            { icon: ShieldCheck, title: "รับประกันสินค้า", sub: "ใหม่ 3 เดือน · มือสอง 1 เดือน" },
+            { icon: Headset, title: "ทีมงานผู้เชี่ยวชาญ", sub: "ให้คำปรึกษาด้านเทคนิค" },
           ].map((f) => (
-            <div key={f.label} className="flex items-center gap-2 text-slate-300 text-xs font-medium">
-              <span className="text-sm">{f.icon}</span>
-              {f.label}
+            <div key={f.title} className="flex items-center gap-3 px-3 sm:px-5 py-4 sm:py-5">
+              <span className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                <f.icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-900">{f.title}</p>
+                <p className="text-xs text-slate-500 truncate">{f.sub}</p>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ─── 3. โซนสินค้าสไลด์แนวนอน ─── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-
-        {/* สินค้าแนะนำ */}
-        {recommendedProducts.length > 0 && (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-12 sm:space-y-14">
+        {/* ─── หมวดหมู่สินค้า ─── */}
+        {categoryTiles.length > 0 && (
           <section>
-            <SectionHeader eyebrow="Editor's Pick" title="สินค้าแนะนำ - PLC, Sensor, Inverter" href="/products" />
-            <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
-              {recommendedProducts.map((p) => (
-                <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
-                  <ProductCard
-                    product={p}
-                    badge={{ label: "แนะนำ", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" }}
-                  />
-                </div>
-              ))}
+            <SectionHeader title="เลือกตามหมวดหมู่" subtitle="หาอุปกรณ์ที่ต้องการได้เร็วขึ้น" href="/products" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {categoryTiles.map((c) => {
+                const Icon = categoryIcon(c.name);
+                return (
+                  <Link
+                    key={c.name}
+                    href={`/products?category=${encodeURIComponent(c.name)}`}
+                    className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:p-4 hover:border-brand-300 hover:bg-brand-50/40 transition-colors"
+                  >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600 group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">{c.name}</span>
+                      <span className="block text-xs text-slate-500 mt-0.5">{c.count} รายการ</span>
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </section>
         )}
 
-        {/* สินค้าขายดี */}
-        {bestSellingProducts.length > 0 ? (
-          <section>
-            <SectionHeader eyebrow="Best Value" title="อุปกรณ์ไฟฟ้าอุตสาหกรรม ขายดี" href="/products" />
-            <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
-              {bestSellingProducts.map((p) => (
-                <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
-                  <ProductCard
-                    product={p}
-                    badge={{ label: "ขายดี", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" }}
-                  />
-                </div>
-              ))}
+        <ProductSection title="สินค้าแนะนำ" subtitle="คัดมาให้โดยทีมงาน" products={recommendedProducts} badge="recommended" />
+        <ProductSection title="สินค้าขายดี" subtitle="ลูกค้าโรงงานสั่งซื้อบ่อย" products={bestSellingProducts} badge="bestseller" />
+        <ProductSection title="สินค้ามาใหม่" subtitle="อัปเดตล่าสุดภายใน 20 วัน" products={latestProducts} badge="new" />
+        <ProductSection title="สินค้าพร้อมส่ง" subtitle="มีของในสต็อก สั่งได้ทันที" products={readyProducts} />
+
+        {/* ─── แบนเนอร์ขอใบเสนอราคา ─── */}
+        <section className="overflow-hidden rounded-2xl bg-brand-600">
+          <div className="relative px-6 py-8 sm:px-10 sm:py-10 flex flex-col md:flex-row md:items-center gap-6">
+            <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10" />
+            <div className="relative flex-1">
+              <p className="inline-flex items-center gap-2 text-sm font-semibold text-brand-100">
+                <FileText className="h-4 w-4" /> สำหรับฝ่ายจัดซื้อ / โรงงาน
+              </p>
+              <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-white">ต้องการสั่งจำนวนมาก หรือหาสินค้าไม่เจอ?</h2>
+              <p className="mt-2 text-sm sm:text-base text-brand-100">
+                แจ้งรุ่นและจำนวนที่ต้องการ ทีมงานจะส่งใบเสนอราคาให้โดยเร็ว
+              </p>
             </div>
-          </section>
-        ) : (
-          <div className="hidden" />
-        )}
-
-        {/* สินค้าล่าสุด */}
-        {latestProducts.length > 0 && (
-          <section>
-            <SectionHeader eyebrow="New Arrivals" title="สินค้ามาใหม่ล่าสุด" href="/products" />
-            <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-4 pt-1 snap-x scroll-smooth no-scrollbar">
-              {latestProducts.map((p) => (
-                <div key={p.id} className="w-50 sm:w-60 shrink-0 snap-start">
-                  <ProductCard
-                    product={p}
-                    badge={{ label: "มาใหม่", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" }}
-                  />
-                </div>
-              ))}
+            <div className="relative flex flex-col sm:flex-row gap-3">
+              <a
+                href={SHOP_LINE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-brand-700 hover:bg-brand-50 transition-colors"
+              >
+                <LineIcon className="h-4 w-4 text-[#06C755]" /> ขอใบเสนอราคา
+              </a>
+              <a
+                href={SHOP_PHONE_TEL}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-white/40 px-6 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+              >
+                <Phone className="h-4 w-4" /> {SHOP_PHONE}
+              </a>
             </div>
-          </section>
-        )}
-
-      </div>
-
-      {/* ─── 4. นโยบายร้านค้า ─── */}
-      <section className="bg-slate-50 border-t border-slate-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 text-center sm:text-left">
-            <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-1.5">นโยบายของเรา</p>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">ซื้อง่าย มั่นใจทุกขั้นตอน ที่ MaxTech Electric</h2>
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
-              <div className="text-3xl mb-4">🔄</div>
-              <h3 className="text-base font-bold text-slate-900 mb-3">เปลี่ยน / คืนสินค้า</h3>
-              <ul className="space-y-2 text-xs sm:text-sm text-slate-500 list-disc list-inside leading-relaxed">
-                <li>แจ้งเคลมได้ภายใน 30 วัน หลังได้รับสินค้า</li>
+        {/* ─── นโยบายร้านค้า ─── */}
+        <section>
+          <SectionHeader title="ซื้อง่าย มั่นใจทุกขั้นตอน" subtitle="นโยบายของ MaxTech Electric" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <PolicyCard icon={ShieldCheck} title="รับประกันสินค้า">
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">สินค้าใหม่ 3 เดือน</span>
+                <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">มือสอง 1 เดือน</span>
+              </div>
+              <ul className="space-y-1.5">
+                <li>ไม่รวมการใช้งานเกินสเปก</li>
+                <li>ไม่รวมการดัดแปลง/ซ่อมเอง</li>
+                <li>สติกเกอร์รับประกันต้องสมบูรณ์</li>
+              </ul>
+            </PolicyCard>
+            <PolicyCard icon={RotateCcw} title="เปลี่ยน / คืนสินค้า">
+              <ul className="space-y-1.5">
+                <li>แจ้งเคลมได้ภายใน 30 วัน</li>
                 <li>สินค้าและแพ็กเกจต้องอยู่ในสภาพเดิม</li>
-                <li>ลูกค้ารับผิดชอบค่าจัดส่งสินค้าคืน</li>
-                <li>คืนเงินเฉพาะค่าสินค้า ไม่รวมค่าจัดส่ง</li>
+                <li>คืนเงินเฉพาะค่าสินค้า ไม่รวมค่าส่ง</li>
                 <li>ดำเนินการภายใน 7 วันทำการ</li>
               </ul>
-            </div>
-
-            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
-              <div className="text-3xl mb-4">📌</div>
-              <h3 className="text-base font-bold text-slate-900 mb-3">ข้อตกลงการสั่งซื้อ</h3>
-              <ul className="space-y-2 text-xs sm:text-sm text-slate-500 list-disc list-inside leading-relaxed">
-                <li>คำสั่งซื้อที่ชำระเงินแล้ว ไม่สามารถยกเลิกได้</li>
-                <li>หากจัดส่งแล้ว ไม่สามารถยกเลิกคำสั่งซื้อได้</li>
-                <li>ร้านไม่รับผิดชอบความเสียหายจากการใช้งานผิดวิธี</li>
+            </PolicyCard>
+            <PolicyCard icon={Truck} title="ค่าจัดส่ง">
+              <p className="text-2xl font-bold text-slate-900">เริ่มต้น ฿50</p>
+              <p className="mt-1">สำหรับ 1–2 ชิ้นแรก ชิ้นถัดไปเพิ่มชิ้นละ ฿50 จัดส่งทั่วประเทศ พร้อมเลขพัสดุติดตามได้ในหน้าคำสั่งซื้อ</p>
+            </PolicyCard>
+            <PolicyCard icon={Wrench} title="ข้อตกลงการสั่งซื้อ">
+              <ul className="space-y-1.5">
+                <li>ชำระเงินแล้วไม่สามารถยกเลิกได้</li>
+                <li>จัดส่งแล้วไม่สามารถยกเลิกได้</li>
+                <li>ไม่รับคืนกรณีสั่งผิดรุ่น/ผิดสเปก กรุณาตรวจสอบก่อนสั่งซื้อ</li>
               </ul>
-            </div>
-
-            <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-6">
-              <div className="text-3xl mb-4">🛡️</div>
-              <h3 className="text-base font-bold text-emerald-900 mb-3">รับประกันสินค้า</h3>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">สินค้าใหม่ 3 เดือน</span>
-                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">สินค้ามือสอง 1 เดือน</span>
-              </div>
-              <ul className="space-y-2 text-xs sm:text-sm text-emerald-800/80 list-disc list-inside leading-relaxed">
-                <li>ไม่รวมกรณีใช้งานเกินสเปก</li>
-                <li>ไม่รวมการดัดแปลงหรือซ่อมแซมเอง</li>
-                <li>ไม่รวมความเสียหายจากภัยธรรมชาติ</li>
-                <li>สติ๊กเกอร์รับประกันต้องสมบูรณ์</li>
-              </ul>
-            </div>
-
-            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
-              <div className="text-3xl mb-4">🚚</div>
-              <h3 className="text-base font-bold text-slate-900 mb-3">ค่าจัดส่งสินค้า</h3>
-              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                1–2 ชิ้นแรก 100 บาท ชิ้นถัดไปเพิ่มชิ้นละ 50 บาท จัดส่งปลอดภัยและรวดเร็วทั่วประเทศไทย
-              </p>
-            </div>
-
-            <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs">
-              <div className="text-3xl mb-4">📦</div>
-              <h3 className="text-base font-bold text-slate-900 mb-3">ติดตามพัสดุ</h3>
-              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                ตรวจสอบสถานะคำสั่งซื้อและเลขพัสดุผ่านทางระบบหน้าเว็บไซต์ได้ทันทีหลังร้านค้าจัดส่งสินค้า
-              </p>
-            </div>
-
-            <div className="bg-emerald-50/60 border border-emerald-200 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <div className="text-3xl mb-3">💬</div>
-                <h3 className="text-base font-bold text-emerald-900 mb-2">ศูนย์ช่วยเหลือ</h3>
-                <p className="text-xs sm:text-sm text-emerald-800/80 leading-relaxed mb-4">
-                  สอบถามข้อมูลเพิ่มเติมเกี่ยวกับสเปกสินค้า PLC, Inverter, Sensor หรือปัญหาการใช้งาน ติดต่อเราได้ตลอดเวลา
-                </p>
-              </div>
-              <a
-                href="https://line.me/R/ti/p/@067rvfqe"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors w-fit"
-              >
-                💬 แชทกับเราใน LINE
-              </a>
-            </div>
+            </PolicyCard>
           </div>
-
-          <div className="mt-6 bg-red-50 border border-red-100 rounded-2xl p-5 flex gap-4 items-start">
-            <div className="text-2xl">⚠️</div>
-            <div>
-              <h3 className="text-sm font-bold text-red-800 mb-1">ข้อสงวนสิทธิ์สำคัญ</h3>
-              <p className="text-xs sm:text-sm text-red-700/90 leading-relaxed">
-                ทางร้านไม่รับเปลี่ยน คืน หรือคืนเงินสินค้าในกรณีที่ลูกค้าสั่งซื้อผิดรุ่น ผิดสเปก หรือผิดประเภทสินค้า กรุณาตรวจสอบรายละเอียดสินค้าให้ถี่ถ้วนก่อนยืนยันรายการสั่งซื้อทุกครั้ง
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── 5. FOOTER ─── */}
-      <footer className="bg-slate-950 text-slate-400 py-16 border-t border-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-
-          {/* Col 1: ข้อมูลบริษัท */}
-          <div className="space-y-4">
-            <h3 className="text-white font-black text-lg tracking-tight">MaxTech Electric</h3>
-            <p className="text-xs leading-relaxed text-slate-500">
-              ผู้นำด้านอุปกรณ์อิเล็กทรอนิกส์และออโตเมชันอุตสาหกรรมครบวงจร คัดสรรสินค้าคุณภาพ เช่น PLC, Sensor, Inverter และ Breaker เพื่อประสิทธิภาพสูงสุดในโรงงานของคุณ
-            </p>
-            <div className="flex gap-4">
-              <a
-                href="https://www.facebook.com/profile.php?id=61591176506538"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-blue-500 transition-colors"
-              >
-                Facebook
-              </a>
-              <a
-                href="https://line.me/R/ti/p/@067rvfqe"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-green-500 transition-colors"
-              >
-                LINE
-              </a>
-
-               <a
-                 href="https://www.instagram.com/maxtechelectric/"
-                target="_blank"
-    rel="noopener noreferrer"
-    className="hover:text-[#E4405F] transition-colors"
-  >
-    Instagram
-  </a>
-
-              
-            </div>
-          </div>
-
-          {/* Col 2: ลิงก์ด่วน */}
-          <div>
-            <h4 className="text-white font-bold text-sm mb-4">บริการและช่วยเหลือ</h4>
-            <ul className="space-y-2.5 text-xs">
-              <li><Link href="/products" className="hover:text-white transition-colors">สินค้าทั้งหมด</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">แจ้งปัญหาการใช้งาน</Link></li>
-              <li><Link href="/about" className="hover:text-white transition-colors">เกี่ยวกับเรา</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">ติดต่อเรา</Link></li>
-            </ul>
-          </div>
-
-          {/* Col 3: ติดต่อเรา */}
-          <div>
-            <h4 className="text-white font-bold text-sm mb-4">ติดต่อเรา</h4>
-            <ul className="space-y-3 text-xs text-slate-400">
-              <li className="flex items-center gap-2">
-                <span>📞</span> <a href="tel:0946861981" className="hover:text-white transition-colors">094-686-1981</a>
-              </li>
-              <li className="flex items-center gap-2">
-                <span>✉️</span> <a href="mailto:maxtechelectric1@gmail.com" className="hover:text-white transition-colors">maxtechelectric1@gmail.com</a>
-              </li>
-              <li className="flex items-center gap-2">
-                <span>📍</span> สมุทรปราการ, ประเทศไทย
-              </li>
-            </ul>
-          </div>
-
-          {/* Col 4: เวลาทำการ */}
-          <div>
-            <h4 className="text-white font-bold text-sm mb-4">เวลาทำการ</h4>
-            <p className="text-xs text-slate-500">
-              จันทร์ - ศุกร์: 08:30 - 17:30 น.<br />
-              เสาร์: 09:00 - 12:00 น.<br />
-              <span className="text-rose-500 italic mt-2 block">*หยุดวันอาทิตย์และวันหยุดนักขัตฤกษ์</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-slate-600">
-          <p>© {new Date().getFullYear()} MaxTech Electric (www.maxtechelectric.com). All rights reserved.</p>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-slate-400">นโยบายความเป็นส่วนตัว</Link>
-            <Link href="/terms" className="hover:text-slate-400">เงื่อนไขการใช้บริการ</Link>
-          </div>
-        </div>
-      </footer>
-
+        </section>
+      </div>
     </main>
   );
 }
 
-/* ─── Shared Types ─── */
-type ProductWithRelations = {
-  id: number;
-  name: string;
-  slug: string;
-  price: number;
-  stock: number;
-  quotationOnly: boolean;
-  category: { name: string } | null;
-  images: { imageUrl: string }[];
-};
+/* ─── Helpers ─── */
 
-/* ─── SectionHeader Component ─── */
-function SectionHeader({ eyebrow, title, href }: { eyebrow: string; title: string; href: string }) {
+function categoryIcon(name: string): LucideIcon {
+  const n = name.toLowerCase();
+  if (n.includes("plc") || n.includes("hmi")) return Cpu;
+  if (n.includes("inverter") || n.includes("servo") || n.includes("motor")) return Gauge;
+  if (n.includes("sensor") || n.includes("เซนเซอร์")) return Zap;
+  if (n.includes("lamp") || n.includes("ไฟ")) return Lightbulb;
+  if (n.includes("switch") || n.includes("สวิ") || n.includes("button")) return ToggleLeft;
+  if (n.includes("breaker") || n.includes("เบรก")) return ShieldCheck;
+  if (n.includes("truck") || n.includes("lift") || n.includes("รถ")) return Truck;
+  return LayoutGrid;
+}
+
+function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href?: string }) {
   return (
-    <div className="flex justify-between items-end border-b border-slate-100 pb-3 mb-4">
-      <div>
-        <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-0.5">{eyebrow}</p>
-        <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">{title}</h2>
+    <div className="mb-5 flex items-end justify-between gap-4">
+      <div className="min-w-0">
+        <h2 className="flex items-center gap-2.5 text-xl sm:text-2xl font-bold text-slate-900">
+          <span className="h-6 w-1.5 rounded-full bg-brand-600" />
+          {title}
+        </h2>
+        {subtitle && <p className="mt-1 pl-4 text-sm text-slate-500">{subtitle}</p>}
       </div>
-      <Link href={href} className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100/80 px-3 py-1 rounded-lg transition-all duration-150">
-        ดูทั้งหมด →
-      </Link>
+      {href && (
+        <Link
+          href={href}
+          className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-600 hover:text-brand-700"
+        >
+          ดูทั้งหมด <ArrowRight className="h-4 w-4" />
+        </Link>
+      )}
     </div>
   );
 }
 
-/* ─── ProductCard Component ─── */
-function ProductCard({
-  product,
+function ProductSection({
+  title,
+  subtitle,
+  products,
   badge,
 }: {
-  product: ProductWithRelations;
-  badge?: { label: string; bg: string; text: string; border: string };
+  title: string;
+  subtitle: string;
+  products: ProductCardData[];
+  badge?: ProductBadge;
+}) {
+  if (products.length === 0) return null;
+  return (
+    <section>
+      <SectionHeader title={title} subtitle={subtitle} href="/products" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+        {products.map((p) => (
+          <ProductCard key={p.id} product={p} badge={badge} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function PolicyCard({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  children: React.ReactNode;
 }) {
   return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="group bg-white border border-slate-100 rounded-2xl overflow-hidden flex flex-col shadow-xs hover:shadow-lg hover:border-slate-200/60 transition-all duration-300 h-full"
-    >
-      <div className="relative w-full aspect-4/3 bg-slate-50 overflow-hidden">
-        <Image
-          src={product.images?.[0]?.imageUrl || "/uploads/no-image.jpg"}
-          alt={product.name}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 50vw, 25vw"
-        />
-        {badge && (
-          <span className={`absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge.bg} ${badge.text} ${badge.border} shadow-2xs`}>
-            {badge.label}
-          </span>
-        )}
+    <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="mb-3 flex items-center gap-2.5">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+          <Icon className="h-4.5 w-4.5" />
+        </span>
+        <h3 className="font-semibold text-slate-900">{title}</h3>
       </div>
-
-      <div className="p-3 flex-1 flex flex-col justify-between">
-        <div>
-          <p className="text-[9px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">
-            {product.category?.name || "ทั่วไป"}
-          </p>
-          <h3 className="text-xs font-bold text-slate-800 group-hover:text-blue-600 line-clamp-2 min-h-8 leading-snug mb-2 transition-colors">
-            {product.name}
-          </h3>
-        </div>
-
-        {product.quotationOnly ? (
-          <div className="flex justify-between items-center border-t border-slate-50 pt-2.5 mt-auto">
-            <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg">
-              📋 ขอใบเสนอราคา
-            </span>
-          </div>
-        ) : (
-          <div className="flex justify-between items-center border-t border-slate-50 pt-2.5 mt-auto">
-            <p className="text-sm sm:text-base font-black text-slate-900">
-              <span className="text-[10px] font-medium mr-0.5">฿</span>
-              {product.price.toLocaleString()}
-            </p>
-
-            <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${
-              product.stock > 0
-                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                : "bg-rose-50 text-rose-600 border-rose-100"
-            }`}>
-              {product.stock > 0 ? `คลัง: ${product.stock}` : "หมด"}
-            </span>
-          </div>
-        )}
-      </div>
-    </Link>
+      <div className="text-sm leading-relaxed text-slate-600">{children}</div>
+    </div>
   );
 }

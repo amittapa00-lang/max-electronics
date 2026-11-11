@@ -3,9 +3,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 
-import { FcGoogle } from "react-icons/fc";
+import SocialLoginButtons from "@/components/SocialLoginButtons";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -84,7 +83,7 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen bg-slate-50/70 flex flex-col items-center justify-center p-5 relative overflow-hidden font-sans select-none antialiased">
       <div className="absolute top-[-10%] left-[-10%] w-125 h-125 bg-amber-200/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-125 h-125 bg-indigo-200/30 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-125 h-125 bg-brand-200/30 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-105 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.05)] p-8 sm:p-10 relative z-10">
         <div className="text-center mb-8">
@@ -95,44 +94,6 @@ export default function RegisterPage() {
           <p className="text-slate-400 mt-1 text-xs font-medium">MaxTech Electric Automation</p>
         </div>
 
-        <div className="flex justify-center mb-6">
- <button
-  type="button"
-  onClick={() => signIn("google", { callbackUrl: "/" })}
-  className="
-    w-full
-    flex
-    items-center
-    justify-center
-    gap-3
-    border
-    border-slate-200
-    rounded-xl
-    py-3
-    bg-white
-    hover:bg-slate-50
-    transition
-  "
->
-  <FcGoogle size={22} />
-  <span className="font-medium">
-    สมัครสมาชิกด้วย Google
-  </span>
-</button>
-
-</div>
-
-<div className="relative my-6">
-  <div className="absolute inset-0 flex items-center">
-    <div className="w-full border-t border-slate-200"></div>
-  </div>
-
-  <div className="relative flex justify-center">
-    <span className="bg-white px-4 text-slate-400 text-sm">
-      หรือสมัครสมาชิกด้วยอีเมล
-    </span>
-  </div>
-</div>
 
         <form onSubmit={handleSubmit} className="space-y-4.5">
           {/* ชื่อ-นามสกุล */}
@@ -226,6 +187,18 @@ export default function RegisterPage() {
             มีบัญชีอยู่แล้ว? <a href="/login" className="text-slate-900 font-bold hover:underline">เข้าสู่ระบบ</a>
           </div>
         </form>
+
+        {/* สมัครด้วยบัญชีอื่น */}
+        <div className="mt-6">
+          <SocialLoginButtons mode="register" />
+        </div>
+
+        <p className="mt-5 text-center text-xs leading-relaxed text-slate-400">
+          การสมัครสมาชิกถือว่าคุณยอมรับ{" "}
+          <a href="/terms" target="_blank" className="font-semibold text-slate-600 hover:text-brand-600 underline">ข้อกำหนดและเงื่อนไข</a>{" "}
+          และ{" "}
+          <a href="/privacy-policy" target="_blank" className="font-semibold text-slate-600 hover:text-brand-600 underline">นโยบายความเป็นส่วนตัว</a>
+        </p>
       </div>
     </main>
   );
