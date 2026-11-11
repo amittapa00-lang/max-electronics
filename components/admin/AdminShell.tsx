@@ -14,6 +14,7 @@ import {
   Menu,
   Package,
   ShoppingBag,
+  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -50,6 +51,7 @@ export default function AdminShell({
     { href: "/admin/products", label: "สินค้า", icon: Package },
     { href: "/admin/categories", label: "หมวดหมู่", icon: FolderTree },
     { href: "/admin/quotes", label: "ใบเสนอราคา", icon: FileText, badge: badges.quotesPending },
+    { href: "/admin/users", label: "ลูกค้า", icon: Users },
   ];
 
   const isActive = (item: NavItem) =>
