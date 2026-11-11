@@ -82,6 +82,7 @@ export default async function OrdersPage() {
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-2 text-sm sm:text-[15px] font-semibold leading-snug text-slate-900">
                         {firstItem?.product.name}
+                        {firstItem?.variantName && <span className="font-normal text-slate-500"> ({firstItem.variantName})</span>}
                       </p>
                       <p className="mt-0.5 text-xs text-slate-500">
                         {order.items.length > 1 ? `และอีก ${order.items.length - 1} รายการ · ` : ""}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Check, Loader2, ShoppingCart, Zap } from "lucide-react";
 
-export default function AddToCartButton({ productId }: { productId: number }) {
+export default function AddToCartButton({ productId, variantId }: { productId: number; variantId?: number }) {
   const router = useRouter();
   const [loading, setLoading] = useState<"add" | "buy" | null>(null);
   const [added, setAdded] = useState(false);
@@ -18,7 +18,7 @@ export default function AddToCartButton({ productId }: { productId: number }) {
       const res = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId }),
+        body: JSON.stringify({ productId, variantId }),
       });
       const data = await res.json().catch(() => ({}));
 

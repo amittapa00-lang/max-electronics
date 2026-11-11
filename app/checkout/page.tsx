@@ -20,11 +20,12 @@ export default async function CheckoutPage() {
 
   const cartItems = await prisma.cartItem.findMany({
     where: { userId: user.id },
-    include: { product: { include: { images: true } } },
+    include: { product: { include: { images: { orderBy: { id: "asc" } } } }, variant: true },
   });
   if (cartItems.length === 0) redirect("/cart");
 
-  const total = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const unitPrice = (item: (typeof cartItems)[number]) => item.variant?.price ?? item.product.price;
+  const total = cartItems.reduce((sum, item) => sum + unitPrice(item) * item.quantity, 0);
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const shippingFee = calcShippingFee(itemCount);
   const grandTotal = total + shippingFee;
@@ -52,7 +53,7 @@ export default async function CheckoutPage() {
 
             <ul className="mt-3 divide-y divide-slate-100 max-h-72 overflow-y-auto">
               {cartItems.map((item) => {
-                const img = item.product.images?.[0]?.imageUrl;
+                const img = item.variant?.imageUrl || item.product.images?.[0]?.imageUrl;
                 return (
                   <li key={item.id} className="flex items-center gap-3 py-3">
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -70,10 +71,11 @@ export default async function CheckoutPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-2 text-sm font-medium leading-snug text-slate-900">{item.product.name}</p>
-                      <p className="text-xs text-slate-400">฿{item.product.price.toLocaleString()} × {item.quantity}</p>
+                      {item.variant && <p className="text-xs font-medium text-slate-600">ตัวเลือก: {item.variant.name}</p>}
+                      <p className="text-xs text-slate-400">฿{unitPrice(item).toLocaleString()} × {item.quantity}</p>
                     </div>
                     <p className="whitespace-nowrap text-sm font-semibold text-slate-900">
-                      ฿{(item.product.price * item.quantity).toLocaleString()}
+                      ฿{(unitPrice(item) * item.quantity).toLocaleString()}
                     </p>
                   </li>
                 );

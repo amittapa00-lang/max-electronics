@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ImageOff } from "lucide-react";
 
 type ProductImage = {
@@ -17,6 +17,17 @@ export default function ProductGallery({
 }) {
   const [index, setIndex] = useState(0);
   const selected = images?.[index]?.imageUrl;
+
+  // เมื่อลูกค้าเลือกตัวเลือกสินค้าที่มีรูป ให้สลับไปแสดงรูปนั้น
+  useEffect(() => {
+    const onShow = (e: Event) => {
+      const url = (e as CustomEvent<string>).detail;
+      const i = images.findIndex((img) => img.imageUrl === url);
+      if (i >= 0) setIndex(i);
+    };
+    window.addEventListener("product:show-image", onShow);
+    return () => window.removeEventListener("product:show-image", onShow);
+  }, [images]);
 
   return (
     <div>

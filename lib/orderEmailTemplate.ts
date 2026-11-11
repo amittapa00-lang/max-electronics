@@ -15,7 +15,7 @@ export type EmailOrder = {
   address: string;
   shippingCompany: string | null;
   trackingNumber: string | null;
-  items: { price: number; quantity: number; product: { name: string } }[];
+  items: { price: number; quantity: number; variantName?: string | null; product: { name: string } }[];
 };
 
 /** ข้อความอีเมลของแต่ละสถานะ (สถานะที่ไม่มีในนี้จะไม่ส่งอีเมล) */
@@ -84,7 +84,7 @@ export function renderOrderEmail(order: EmailOrder, status: string) {
     .map(
       (i) => `
         <tr>
-          <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;color:#0f172a;font-size:14px;">${esc(i.product.name)} <span style="color:#64748b;">× ${i.quantity}</span></td>
+          <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;color:#0f172a;font-size:14px;">${esc(i.product.name)}${i.variantName ? ` <span style="color:#b3141a;">(${esc(i.variantName)})</span>` : ""} <span style="color:#64748b;">× ${i.quantity}</span></td>
           <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;color:#0f172a;font-size:14px;white-space:nowrap;">฿${(i.price * i.quantity).toLocaleString()}</td>
         </tr>`
     )

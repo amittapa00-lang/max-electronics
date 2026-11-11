@@ -1,98 +1,46 @@
 import { requireAdmin } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { parseProductInput, ProductInputError } from "@/lib/productInput";
+import { saveVariants } from "@/lib/variants";
 
+/** แก้ไขสินค้า (รูปและตัวเลือกจะถูกแทนที่ด้วยรายการที่ส่งมา) */
 export async function PUT(
   req: Request,
-  {
-    params,
-  }: {
-    params: Promise<{
-      id: string;
-    }>;
-  }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
   try {
     const { id } = await params;
+    const productId = Number(id);
+    const input = await parseProductInput(await req.json());
 
-    const {
-  name,
-  productCode,
-  description,
-  price,
-  quotationOnly,
-  stock,
-  categoryId,
-  images,
-} = await req.json();
-
-    // ลบรูปเก่าทั้งหมดก่อน
-    await prisma.productImage.deleteMany({
-      where: {
-        productId: Number(id),
-      },
+    const product = await prisma.$transaction(async (tx) => {
+      await tx.productImage.deleteMany({ where: { productId } });
+      const updated = await tx.product.update({
+        where: { id: productId },
+        data: {
+          name: input.name,
+          productCode: input.productCode,
+          description: input.description,
+          price: input.price,
+          quotationOnly: input.quotationOnly,
+          stock: input.stock,
+          categoryId: input.categoryId,
+          images: { create: input.images.map((imageUrl) => ({ imageUrl })) },
+        },
+      });
+      await saveVariants(tx, productId, input.variants);
+      return updated;
     });
 
-    const product =
-  await prisma.product.update({
-    where: {
-      id: Number(id),
-    },
-
-    data: {
-      name,
-      productCode,
-      description,
-
-      price: quotationOnly
-        ? 0
-        : Number(price),
-
-      quotationOnly,
-
-      stock: Number(stock),
-
-      categoryId: Number(categoryId),
-
-      images: {
-        create:
-          images?.map((url: string) => ({
-            imageUrl: url,
-          })) || [],
-      },
-    },
-
-    include: {
-      category: {
-        include: {
-          parent: true,
-        },
-      },
-
-      images: true,
-    },
-  });
-    return NextResponse.json(
-      product
-    );
+    return NextResponse.json(product);
   } catch (error) {
-    console.error(
-      "UPDATE PRODUCT ERROR:",
-      error
-    );
-
-    return NextResponse.json(
-      {
-        error:
-          "แก้ไขสินค้าไม่สำเร็จ",
-      },
-      {
-        status: 500,
-      }
-    );
+    if (error instanceof ProductInputError) return NextResponse.json({ error: error.message }, { status: 400 });
+    console.error("UPDATE PRODUCT ERROR:", error);
+    return NextResponse.json({ error: "แก้ไขสินค้าไม่สำเร็จ" }, { status: 500 });
   }
 }
 

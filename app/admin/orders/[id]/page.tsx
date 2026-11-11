@@ -31,7 +31,7 @@ export default async function AdminOrderDetailPage({
     where: { id: orderId },
     include: {
       user: { select: { name: true, email: true } },
-      items: { include: { product: { include: { images: true } } } },
+      items: { include: { product: { include: { images: true } }, variant: { select: { stock: true } } } },
     },
   });
   if (!order) notFound();
@@ -177,9 +177,12 @@ export default async function AdminOrderDetailPage({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-2 text-sm font-semibold text-slate-900">{item.product.name}</p>
+                      {item.variantName && (
+                        <p className="mt-0.5 inline-block rounded bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">ตัวเลือก: {item.variantName}</p>
+                      )}
                       <p className="text-xs text-slate-500">
                         {item.product.productCode && <span className="font-mono">{item.product.productCode} · </span>}
-                        {item.quantity} × ฿{item.price.toLocaleString()} · คงเหลือในสต็อก {item.product.stock}
+                        {item.quantity} × ฿{item.price.toLocaleString()} · คงเหลือในสต็อก {item.variant ? item.variant.stock : item.product.stock}
                       </p>
                     </div>
                     <p className="shrink-0 font-semibold text-slate-900">฿{(item.price * item.quantity).toLocaleString()}</p>

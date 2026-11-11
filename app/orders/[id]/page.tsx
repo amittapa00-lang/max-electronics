@@ -182,6 +182,7 @@ export default async function OrderDetailPage({
                     </Link>
                     <div className="min-w-0 flex-1">
                       <p className="line-clamp-2 text-sm font-medium leading-snug text-slate-900">{item.product.name}</p>
+                      {item.variantName && <p className="text-xs font-medium text-slate-600">ตัวเลือก: {item.variantName}</p>}
                       <p className="text-xs text-slate-400">฿{item.price.toLocaleString()} × {item.quantity}</p>
                     </div>
                     <p className="whitespace-nowrap text-sm font-semibold text-slate-900">

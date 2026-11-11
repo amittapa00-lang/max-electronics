@@ -8,17 +8,17 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  name     String
-  email    String  @unique
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
 
   password String?
 
-  image    String?
+  image String?
 
   provider String? @default("credentials")
 
-  role     String @default("USER")
+  role String @default("USER")
 
   emailVerified Boolean @default(false)
 
@@ -26,24 +26,24 @@ model User {
 
   createdAt DateTime @default(now())
 
-  orders Order[]
+  orders    Order[]
   cartItems CartItem[]
 }
 
 model Category {
-  id        Int        @id @default(autoincrement())
-  name      String
+  id   Int    @id @default(autoincrement())
+  name String
 
-  order    Int        @default(0)
+  order Int @default(0)
 
-  parentId  Int?
-  parent    Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  parentId Int?
+  parent   Category? @relation("CategoryChildren", fields: [parentId], references: [id])
 
-  children  Category[] @relation("CategoryChildren")
+  children Category[] @relation("CategoryChildren")
 
-  products  Product[]
+  products Product[]
 
-  createdAt DateTime   @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Product {
@@ -52,15 +52,15 @@ model Product {
   slug        String @unique
   description String @db.Text
 
-  price       Int
-  stock       Int
+  price Int
+  stock Int
 
   quotationOnly Boolean @default(false)
-  
+
   productCode String?
 
-  sold          Int      @default(0)       // เก็บจำนวนที่ขายได้จริง (เริ่มต้นที่ 0)
-  isRecommended Boolean  @default(false)   // เก็บว่าเป็นสินค้าแนะนำไหม (เริ่มต้นเป็น false)
+  sold          Int     @default(0) // เก็บจำนวนที่ขายได้จริง (เริ่มต้นที่ 0)
+  isRecommended Boolean @default(false) // เก็บว่าเป็นสินค้าแนะนำไหม (เริ่มต้นเป็น false)
 
   categoryId Int
   category   Category @relation(fields: [categoryId], references: [id])
@@ -71,6 +71,8 @@ model Product {
   orderItems OrderItem[]
 
   quotes Quote[]
+
+  variants ProductVariant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -122,6 +124,11 @@ model OrderItem {
 
   price Float
 
+  // ตัวเลือกที่ลูกค้าเลือก (เก็บชื่อไว้ด้วย เผื่อตัวเลือกถูกลบภายหลัง)
+  variantId   Int?
+  variantName String?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
   order Order @relation(fields: [orderId], references: [id])
 
   product Product @relation(fields: [productId], references: [id])
@@ -134,16 +141,18 @@ model CartItem {
 
   userId    Int
   productId Int
+  variantId Int?
 
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  user    User            @relation(fields: [userId], references: [id])
+  product Product         @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 }
 
 model EmailOTP {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  email     String
-  otp       String
+  email String
+  otp   String
 
   expiresAt DateTime
 
@@ -172,8 +181,8 @@ model Quote {
   subDistrict  String?
   zipCode      String?
 
-  productId   Int
-  product     Product  @relation(fields: [productId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 model PageView {
@@ -187,4 +196,23 @@ model PageView {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// ตัวเลือกของสินค้า เช่น สี / ขนาด (แต่ละตัวเลือกมีสต็อกของตัวเอง)
+model ProductVariant {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  name     String // เช่น "สีขาว/ใส"
+  sku      String? // รหัสเฉพาะตัวเลือก (ไม่บังคับ)
+  price    Int? // null = ใช้ราคาสินค้าหลัก
+  stock    Int     @default(0)
+  imageUrl String? // รูปที่แสดงเมื่อเลือกตัวเลือกนี้
+  order    Int     @default(0)
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
 }

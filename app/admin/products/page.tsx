@@ -56,7 +56,11 @@ export default async function AdminProductsPage({
   const [products, totalAll, outCount, lowCount] = await Promise.all([
     prisma.product.findMany({
       where,
-      include: { category: { select: { name: true } }, images: { take: 1, select: { imageUrl: true } } },
+      include: {
+        category: { select: { name: true } },
+        images: { take: 1, orderBy: { id: "asc" }, select: { imageUrl: true } },
+        _count: { select: { variants: true } },
+      },
       orderBy: (SORTS[sort] ?? SORTS.new).orderBy,
     }),
     prisma.product.count(),
@@ -173,6 +177,7 @@ export default async function AdminProductsPage({
                       {p.productCode && <span className="font-mono">{p.productCode} · </span>}
                       {p.category.name}
                       {sold > 0 && <> · ขายแล้ว {sold}</>}
+                      {p._count.variants > 0 && <span className="ml-1 rounded bg-sky-50 px-1 font-semibold text-sky-700">{p._count.variants} ตัวเลือก</span>}
                       {p.isRecommended && <span className="ml-1 rounded bg-brand-50 px-1 font-semibold text-brand-700">แนะนำ</span>}
                     </p>
                   </div>

@@ -41,7 +41,14 @@ export async function changeOrderStatus(
   const updated = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
-      include: { items: { include: { product: { select: { id: true, name: true, stock: true } } } } },
+      include: {
+        items: {
+          include: {
+            product: { select: { id: true, name: true, stock: true } },
+            variant: { select: { id: true, name: true, stock: true } },
+          },
+        },
+      },
     });
     if (!order) throw new OrderStatusError("ไม่พบคำสั่งซื้อ", 404);
 
@@ -49,11 +56,20 @@ export async function changeOrderStatus(
     const willDeduct = STOCK_DEDUCTED.includes(newStatus);
 
     if (!wasDeducted && willDeduct) {
-      const short = order.items.filter((i) => i.product.stock < i.quantity);
+      // รวมจำนวนที่ต้องใช้ต่อ "ตัวเลือก" (หรือต่อสินค้า ถ้าไม่มีตัวเลือก) แล้วเทียบกับสต็อก
+      const need = new Map<string, { label: string; have: number; qty: number }>();
+      for (const i of order.items) {
+        const key = i.variant ? `v${i.variant.id}` : `p${i.productId}`;
+        const label = i.variant ? `${i.product.name} (${i.variant.name})` : i.product.name;
+        const have = i.variant ? i.variant.stock : i.product.stock;
+        const cur = need.get(key) ?? { label, have, qty: 0 };
+        cur.qty += i.quantity;
+        need.set(key, cur);
+      }
+      const short = [...need.values()].filter((n) => n.have < n.qty);
       if (short.length > 0) {
         throw new OrderStatusError(
-          "สต็อกไม่พอ: " +
-            short.map((i) => `${i.product.name} (มี ${i.product.stock} ต้องใช้ ${i.quantity})`).join(", ")
+          "สต็อกไม่พอ: " + short.map((n) => `${n.label} (มี ${n.have} ต้องใช้ ${n.qty})`).join(", ")
         );
       }
       for (const item of order.items) {
@@ -61,6 +77,12 @@ export async function changeOrderStatus(
           where: { id: item.productId },
           data: { stock: { decrement: item.quantity } },
         });
+        if (item.variant) {
+          await tx.productVariant.update({
+            where: { id: item.variant.id },
+            data: { stock: { decrement: item.quantity } },
+          });
+        }
       }
     } else if (wasDeducted && !willDeduct) {
       for (const item of order.items) {
@@ -68,6 +90,12 @@ export async function changeOrderStatus(
           where: { id: item.productId },
           data: { stock: { increment: item.quantity } },
         });
+        if (item.variant) {
+          await tx.productVariant.update({
+            where: { id: item.variant.id },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
       }
     }
 

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { BadgeCheck, ChevronRight, FileText, Phone, ShieldCheck, Truck } from "lucide-react";
 import ProductGallery from "./ProductGallery";
-import AddToCartButton from "@/components/AddToCartButton";
+import ProductPurchase from "@/components/ProductPurchase";
 import ProductCard from "@/components/ProductCard";
 import { LineIcon, SHOP_LINE_URL, SHOP_PHONE, SHOP_PHONE_TEL } from "@/components/SocialIcons";
 
@@ -16,7 +16,11 @@ export default async function ProductDetailPage({
 
   const product = await prisma.product.findUnique({
     where: { slug },
-    include: { category: { include: { parent: true } }, images: true },
+    include: {
+      category: { include: { parent: true } },
+      images: { orderBy: { id: "asc" } },
+      variants: { orderBy: { order: "asc" } },
+    },
   });
 
   if (!product) notFound();
@@ -83,61 +87,41 @@ export default async function ProductDetailPage({
           {/* ราคา + สถานะ */}
           <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5">
             {product.quotationOnly ? (
-              <div>
-                <p className="text-sm text-slate-500">ราคา</p>
-                <p className="mt-1 text-2xl font-bold text-slate-900">ขอใบเสนอราคา</p>
-                <p className="mt-1 text-sm text-slate-500">ราคาขึ้นกับจำนวนและสเปก ทีมงานจะติดต่อกลับพร้อมใบเสนอราคา</p>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-end justify-between gap-3">
+              <>
                 <div>
-                  <p className="text-sm text-slate-500">ราคา (รวม VAT)</p>
-                  <p className="mt-1 text-4xl font-bold leading-none text-brand-600">
-                    <span className="mr-1 text-2xl">฿</span>
-                    {product.price.toLocaleString()}
-                  </p>
+                  <p className="text-sm text-slate-500">ราคา</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-900">ขอใบเสนอราคา</p>
+                  <p className="mt-1 text-sm text-slate-500">ราคาขึ้นกับจำนวนและสเปก ทีมงานจะติดต่อกลับพร้อมใบเสนอราคา</p>
+                  {product.variants.length > 0 && (
+                    <p className="mt-2 text-sm text-slate-600">
+                      มีตัวเลือก: {product.variants.map((v) => v.name).join(" · ")}
+                    </p>
+                  )}
                 </div>
-                <span
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${
-                    inStock ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  <span className={`h-2 w-2 rounded-full ${inStock ? "bg-emerald-500" : "bg-slate-400"}`} />
-                  {inStock ? `มีสินค้า ${product.stock} ชิ้น` : "สินค้าหมด"}
-                </span>
-              </div>
+                <div className="mt-5">
+                  <Link
+                    href={`/quote/${product.id}`}
+                    className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 text-base font-semibold text-white hover:bg-brand-700 transition-colors"
+                  >
+                    <FileText className="h-5 w-5" /> ขอใบเสนอราคา
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <ProductPurchase
+                productId={product.id}
+                price={product.price}
+                stock={product.stock}
+                variants={product.variants.map((v) => ({
+                  id: v.id,
+                  name: v.name,
+                  sku: v.sku,
+                  price: v.price,
+                  stock: v.stock,
+                  imageUrl: v.imageUrl,
+                }))}
+              />
             )}
-
-            <div className="mt-5">
-              {product.quotationOnly ? (
-                <Link
-                  href={`/quote/${product.id}`}
-                  className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 text-base font-semibold text-white hover:bg-brand-700 transition-colors"
-                >
-                  <FileText className="h-5 w-5" /> ขอใบเสนอราคา
-                </Link>
-              ) : inStock ? (
-                <AddToCartButton productId={product.id} />
-              ) : (
-                <div className="space-y-3">
-                  <button
-                    type="button"
-                    disabled
-                    className="h-13 w-full cursor-not-allowed rounded-lg bg-slate-100 text-base font-semibold text-slate-400"
-                  >
-                    สินค้าหมดชั่วคราว
-                  </button>
-                  <a
-                    href={SHOP_LINE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    <LineIcon className="h-4 w-4 text-[#06C755]" /> สอบถามวันเข้าของ
-                  </a>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* จุดเด่นร้าน */}

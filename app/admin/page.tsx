@@ -19,7 +19,20 @@ import OrderStatusBadge from "@/components/OrderStatusBadge";
 import { AdminPage, Card, PageHeader, StatCard, btn } from "@/components/admin/ui";
 import { getPeriodRange, bucketItems, startOfDay, startOfMonth, type Period } from "@/lib/dateRange";
 
-const sumTotal = (orders: { total: number }[]) => orders.reduce((s, o) => s + Number(o.total || 0), 0);
+type SaleOrder = { total: number; items: { price: number; quantity: number }[] };
+
+/** แยกยอดขายสินค้า (ไม่รวมค่าส่ง) กับค่าส่ง จากยอดที่บันทึกไว้ในแต่ละคำสั่งซื้อ */
+function summarize(orders: SaleOrder[]) {
+  let products = 0;
+  let total = 0;
+  for (const o of orders) {
+    products += o.items.reduce((s, i) => s + i.price * i.quantity, 0);
+    total += Number(o.total || 0);
+  }
+  return { products, shipping: Math.max(0, total - products), total, count: orders.length };
+}
+
+const saleSelect = { total: true, items: { select: { price: true, quantity: true } } } as const;
 
 const dateFmt = new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
 const todayFmt = new Intl.DateTimeFormat("th-TH", { dateStyle: "full", timeZone: "Asia/Bangkok" });
@@ -53,11 +66,11 @@ export default async function AdminDashboard({
     prisma.quote.count({ where: { status: "PENDING" } }),
     prisma.product.findMany({ where: { stock: 0, quotationOnly: false }, orderBy: { name: "asc" }, select: { id: true, name: true, stock: true } }),
     prisma.product.findMany({ where: { stock: { gt: 0, lte: 5 } }, orderBy: { stock: "asc" }, select: { id: true, name: true, stock: true } }),
-    prisma.order.findMany({ where: { createdAt: { gte: startOfDay(now) }, ...notCancelled }, select: { total: true } }),
-    prisma.order.findMany({ where: { createdAt: { gte: startOfMonth(now) }, ...notCancelled }, select: { total: true } }),
+    prisma.order.findMany({ where: { createdAt: { gte: startOfDay(now) }, ...notCancelled }, select: saleSelect }),
+    prisma.order.findMany({ where: { createdAt: { gte: startOfMonth(now) }, ...notCancelled }, select: saleSelect }),
     prisma.order.findMany({
       where: { createdAt: { gte: rangeStart, lt: rangeEnd }, ...notCancelled },
-      select: { createdAt: true, total: true },
+      select: { createdAt: true, ...saleSelect },
     }),
     prisma.pageView.count({ where: { createdAt: { gte: startOfDay(now) } } }),
     prisma.pageView.count({ where: { createdAt: { gte: startOfMonth(now) } } }),
@@ -82,8 +95,12 @@ export default async function AdminDashboard({
     qty: b._sum.quantity ?? 0,
   }));
 
+  const today = summarize(todayOrders);
+  const month = summarize(monthOrders);
+  const range = summarize(ordersInRange);
+
   const salesChartData = bucketItems(
-    ordersInRange.map((o) => ({ createdAt: o.createdAt, total: Number(o.total || 0) })),
+    ordersInRange.map((o) => ({ createdAt: o.createdAt, total: summarize([o]).products })),
     period,
     rangeStart,
     rangeEnd,
@@ -138,8 +155,20 @@ export default async function AdminDashboard({
 
       {/* ตัวเลขหลัก */}
       <section className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="ยอดสั่งซื้อวันนี้" value={`฿${sumTotal(todayOrders).toLocaleString()}`} sub={`${todayOrders.length} คำสั่งซื้อ`} icon={TrendingUp} tone="emerald" />
-        <StatCard label="ยอดสั่งซื้อเดือนนี้" value={`฿${sumTotal(monthOrders).toLocaleString()}`} sub={`${monthOrders.length} คำสั่งซื้อ`} icon={ShoppingBag} tone="brand" />
+        <StatCard
+          label="ยอดขายสินค้าวันนี้"
+          value={`฿${today.products.toLocaleString()}`}
+          sub={`ไม่รวมค่าส่ง · ค่าส่ง ฿${today.shipping.toLocaleString()} · ${today.count} คำสั่งซื้อ`}
+          icon={TrendingUp}
+          tone="emerald"
+        />
+        <StatCard
+          label="ยอดขายสินค้าเดือนนี้"
+          value={`฿${month.products.toLocaleString()}`}
+          sub={`ไม่รวมค่าส่ง · ค่าส่ง ฿${month.shipping.toLocaleString()} · ${month.count} คำสั่งซื้อ`}
+          icon={ShoppingBag}
+          tone="brand"
+        />
         <StatCard label="กำลังจัดส่ง" value={count("SHIPPING")} sub="รอลูกค้าได้รับ" icon={Truck} tone="sky" href="/admin/orders?status=SHIPPING" />
         <StatCard label="ผู้เข้าชมวันนี้" value={visitorsToday.toLocaleString()} sub={`เดือนนี้ ${visitorsMonth.toLocaleString()} ครั้ง`} icon={Eye} tone="slate" />
       </section>
@@ -154,16 +183,25 @@ export default async function AdminDashboard({
           </Suspense>
         }
       >
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs text-slate-500">ช่วงที่เลือก</p>
-            <p className="font-semibold text-slate-800">{rangeLabel}</p>
+        <p className="mb-3 text-sm text-slate-500">
+          ช่วงที่เลือก: <span className="font-semibold text-slate-800">{rangeLabel}</span> · {range.count} คำสั่งซื้อ (ไม่รวมที่ยกเลิก)
+        </p>
+        <dl className="mb-5 grid grid-cols-3 divide-x divide-slate-100 rounded-lg border border-slate-200">
+          <div className="px-3 py-3 sm:px-4">
+            <dt className="text-xs text-slate-500">ยอดขายสินค้า</dt>
+            <dd className="text-lg font-bold text-emerald-700 sm:text-2xl">฿{range.products.toLocaleString()}</dd>
+            <dd className="text-[11px] text-slate-400">ไม่รวมค่าส่ง</dd>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold text-slate-900">฿{sumTotal(ordersInRange).toLocaleString()}</p>
-            <p className="text-xs text-slate-500">{ordersInRange.length} คำสั่งซื้อ (ไม่รวมที่ยกเลิก)</p>
+          <div className="px-3 py-3 sm:px-4">
+            <dt className="text-xs text-slate-500">ค่าจัดส่ง</dt>
+            <dd className="text-lg font-bold text-slate-700 sm:text-2xl">฿{range.shipping.toLocaleString()}</dd>
           </div>
-        </div>
+          <div className="px-3 py-3 sm:px-4">
+            <dt className="text-xs text-slate-500">รวมที่ลูกค้าจ่าย</dt>
+            <dd className="text-lg font-bold text-slate-900 sm:text-2xl">฿{range.total.toLocaleString()}</dd>
+          </div>
+        </dl>
+        <p className="mb-1 text-xs text-slate-500">กราฟแสดงยอดขายสินค้า (ไม่รวมค่าส่ง)</p>
         <SalesTrendChart data={salesChartData} />
       </Card>
 

@@ -1,44 +1,46 @@
 import { prisma } from "@/lib/prisma";
-import EditProductForm from "./EditProductForm";
+import { notFound } from "next/navigation";
+import ProductForm from "@/components/admin/ProductForm";
 
-export default async function EditProductPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const productId = Number(id);
+  if (!Number.isInteger(productId)) notFound();
 
-  const product =
-    await prisma.product.findUnique({
-      where: {
-        id: Number(id),
-      },
-
-      include: {
-        category: true,
-        images: true,
-      },
-    });
-
-  if (!product) {
-    return (
-      <div>
-        ไม่พบสินค้า
-      </div>
-    );
-  }
-
- const categories =
-  await prisma.category.findMany({
-    include: {
-      parent: true,
-    },
-  });
+  const [product, categories] = await Promise.all([
+    prisma.product.findUnique({
+      where: { id: productId },
+      include: { images: { orderBy: { id: "asc" } }, variants: { orderBy: { order: "asc" } } },
+    }),
+    prisma.category.findMany({
+      select: { id: true, name: true, parentId: true },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+    }),
+  ]);
+  if (!product) notFound();
 
   return (
-    <EditProductForm
-      product={product}
+    <ProductForm
       categories={categories}
+      initial={{
+        id: product.id,
+        name: product.name,
+        productCode: product.productCode ?? "",
+        description: product.description,
+        price: String(product.price),
+        stock: String(product.stock),
+        quotationOnly: product.quotationOnly,
+        categoryId: String(product.categoryId),
+        images: product.images.map((i) => i.imageUrl),
+        variants: product.variants.map((x) => ({
+          id: x.id,
+          name: x.name,
+          sku: x.sku ?? "",
+          price: x.price === null ? "" : String(x.price),
+          stock: String(x.stock),
+          imageUrl: x.imageUrl ?? "",
+        })),
+      }}
     />
   );
 }

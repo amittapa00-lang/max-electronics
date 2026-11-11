@@ -33,12 +33,10 @@ export default async function CartPage() {
     },
 
     include: {
-      product: {
-        include: {
-          images: true,
-        },
-      },
+      product: { include: { images: { orderBy: { id: "asc" } } } },
+      variant: true,
     },
+    orderBy: { id: "asc" },
   });
 
   return (

@@ -44,79 +44,54 @@ export async function POST(
       );
     }
 
-    const body =
-      await req.json();
+    const body = await req.json();
+    const productId = Number(body.productId);
+    const variantId = body.variantId ? Number(body.variantId) : null;
 
-    const product =
-      await prisma.product.findUnique({
-        where: {
-          id: body.productId,
-        },
-      });
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { variants: { select: { id: true, name: true, stock: true } } },
+    });
 
     if (!product) {
-      return NextResponse.json(
-        {
-          error:
-            "ไม่พบสินค้า",
-        },
-        {
-          status: 404,
-        }
-      );
+      return NextResponse.json({ error: "ไม่พบสินค้า" }, { status: 404 });
+    }
+    if (product.quotationOnly) {
+      return NextResponse.json({ error: "สินค้านี้ต้องขอใบเสนอราคา" }, { status: 400 });
     }
 
-    if (product.stock <= 0) {
-      return NextResponse.json(
-        {
-          error:
-            "สินค้าหมด",
-        },
-        {
-          status: 400,
-        }
-      );
+    // สินค้าที่มีตัวเลือก ต้องเลือกตัวเลือกก่อน
+    const hasVariants = product.variants.length > 0;
+    let available = product.stock;
+    if (hasVariants) {
+      const variant = product.variants.find((v) => v.id === variantId);
+      if (!variant) {
+        return NextResponse.json({ error: "กรุณาเลือกตัวเลือกสินค้า" }, { status: 400 });
+      }
+      available = variant.stock;
     }
 
-    const existing =
-      await prisma.cartItem.findFirst({
-        where: {
-          userId: user.id,
-          productId:
-            body.productId,
-        },
-      });
+    const existing = await prisma.cartItem.findFirst({
+      where: { userId: user.id, productId, variantId: hasVariants ? variantId : null },
+    });
+
+    if ((existing?.quantity ?? 0) + 1 > available) {
+      return NextResponse.json(
+        { error: available <= 0 ? "สินค้าหมด" : `มีสินค้าเหลือ ${available} ชิ้น (อยู่ในตะกร้าแล้ว ${existing?.quantity ?? 0} ชิ้น)` },
+        { status: 400 }
+      );
+    }
 
     if (existing) {
-      await prisma.cartItem.update({
-        where: {
-          id: existing.id,
-        },
-        data: {
-          quantity: {
-            increment: 1,
-          },
-        },
-      });
-
-      return NextResponse.json({
-        success: true,
-      });
+      await prisma.cartItem.update({ where: { id: existing.id }, data: { quantity: { increment: 1 } } });
+      return NextResponse.json({ success: true });
     }
 
-    const cartItem =
-      await prisma.cartItem.create({
-        data: {
-          userId: user.id,
-          productId:
-            body.productId,
-          quantity: 1,
-        },
-      });
+    const cartItem = await prisma.cartItem.create({
+      data: { userId: user.id, productId, variantId: hasVariants ? variantId : null, quantity: 1 },
+    });
 
-    return NextResponse.json(
-      cartItem
-    );
+    return NextResponse.json(cartItem);
   } catch (error) {
     console.error(error);
 

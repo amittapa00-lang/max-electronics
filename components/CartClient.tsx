@@ -19,7 +19,12 @@ type CartItem = {
     stock?: number;
     images: { id: number; imageUrl: string }[];
   };
+  variant?: { id: number; name: string; price: number | null; stock: number; imageUrl: string | null } | null;
 };
+
+/** ราคาต่อชิ้นจริง (ตัวเลือกอาจมีราคาของตัวเอง) */
+const unitPrice = (i: CartItem) => i.variant?.price ?? i.product.price;
+const stockOf = (i: CartItem) => (i.variant ? i.variant.stock : i.product.stock);
 
 export default function CartClient({ cartItems }: { cartItems: CartItem[] }) {
   const router = useRouter();
@@ -52,7 +57,7 @@ export default function CartClient({ cartItems }: { cartItems: CartItem[] }) {
   };
 
   const totalQty = cartItems.reduce((s, i) => s + i.quantity, 0);
-  const subtotal = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
+  const subtotal = cartItems.reduce((s, i) => s + unitPrice(i) * i.quantity, 0);
   const shippingFee = calcShippingFee(totalQty);
   const grandTotal = subtotal + shippingFee;
   const busy = busyId !== null || isPending;
@@ -83,7 +88,7 @@ export default function CartClient({ cartItems }: { cartItems: CartItem[] }) {
           {/* รายการสินค้า */}
           <div className="lg:col-span-2 overflow-hidden rounded-xl border border-slate-200 bg-white divide-y divide-slate-100">
             {cartItems.map((item) => {
-              const img = item.product.images?.[0]?.imageUrl;
+              const img = item.variant?.imageUrl || item.product.images?.[0]?.imageUrl;
               const rowBusy = busyId === item.id;
               const href = item.product.slug ? `/products/${item.product.slug}` : undefined;
               return (
@@ -108,6 +113,11 @@ export default function CartClient({ cartItems }: { cartItems: CartItem[] }) {
                           </Link>
                         ) : (
                           <p className="line-clamp-2 text-sm sm:text-[15px] font-semibold leading-snug text-slate-900">{item.product.name}</p>
+                        )}
+                        {item.variant && (
+                          <p className="mt-1 inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                            ตัวเลือก: {item.variant.name}
+                          </p>
                         )}
                         {item.product.productCode && (
                           <p className="mt-0.5 font-mono text-xs text-slate-400">รุ่น {item.product.productCode}</p>
@@ -141,7 +151,7 @@ export default function CartClient({ cartItems }: { cartItems: CartItem[] }) {
                         <button
                           type="button"
                           onClick={() => updateQty(item.id, item.quantity + 1)}
-                          disabled={busy || (item.product.stock !== undefined && item.quantity >= item.product.stock)}
+                          disabled={busy || (stockOf(item) !== undefined && item.quantity >= stockOf(item)!)}
                           className="flex h-9 w-9 items-center justify-center text-slate-600 hover:bg-slate-50 disabled:text-slate-300"
                           aria-label="เพิ่มจำนวน"
                         >
@@ -150,8 +160,8 @@ export default function CartClient({ cartItems }: { cartItems: CartItem[] }) {
                       </div>
 
                       <div className="text-right">
-                        <p className="text-xs text-slate-400">฿{item.product.price.toLocaleString()} / ชิ้น</p>
-                        <p className="text-lg font-bold text-slate-900">฿{(item.product.price * item.quantity).toLocaleString()}</p>
+                        <p className="text-xs text-slate-400">฿{unitPrice(item).toLocaleString()} / ชิ้น</p>
+                        <p className="text-lg font-bold text-slate-900">฿{(unitPrice(item) * item.quantity).toLocaleString()}</p>
                       </div>
                     </div>
                   </div>

@@ -38,6 +38,7 @@ export async function POST(req: Request) {
       },
       include: {
         product: true,
+        variant: true,
       },
     });
 
@@ -48,11 +49,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const productTotal = cartItems.reduce(
-      (sum, item) =>
-        sum + item.product.price * item.quantity,
-      0
-    );
+    // ราคาต่อชิ้นจริง: ตัวเลือกอาจมีราคาของตัวเอง
+    const unitPrice = (item: (typeof cartItems)[number]) => item.variant?.price ?? item.product.price;
+
+    const productTotal = cartItems.reduce((sum, item) => sum + unitPrice(item) * item.quantity, 0);
 
     const itemCount = cartItems.reduce(
       (sum, item) => sum + item.quantity,
@@ -81,7 +81,9 @@ export async function POST(req: Request) {
         orderId: order.id,
         productId: item.productId,
         quantity: item.quantity,
-        price: item.product.price,
+        price: unitPrice(item),
+        variantId: item.variantId,
+        variantName: item.variant?.name ?? null,
       })),
     });
 
@@ -113,14 +115,14 @@ export async function POST(req: Request) {
             `
             <tr>
               <td style="padding:8px;border-bottom:1px solid #eee;">
-                ${item.product.name}
+                ${item.product.name}${item.variant ? ` (${item.variant.name})` : ""}
               </td>
               <td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">
                 ${item.quantity}
               </td>
               <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">
                 ฿${(
-                  item.product.price * item.quantity
+                  unitPrice(item) * item.quantity
                 ).toLocaleString()}
               </td>
             </tr>
