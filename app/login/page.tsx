@@ -1,12 +1,12 @@
 "use client";
 
-import { signIn, getSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { continueUrl } from "@/lib/authRedirect";
 import SocialLoginButtons from "@/components/SocialLoginButtons";
 
 export default function LoginPage() {
-  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,12 +30,10 @@ export default function LoginPage() {
         return;
       }
 
-      const session = await getSession();
-      if ((session?.user as { role?: string })?.role === "ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push("/");
-      }
+      // แอดมิน → /admin, ลูกค้า → หน้าที่ตั้งใจจะเปิด (ตัดสินที่ /auth/continue)
+      // โหลดหน้าใหม่ทั้งหน้าเพื่อให้ทุกส่วนเห็นสถานะเข้าสู่ระบบล่าสุด
+      window.location.replace(continueUrl());
+      return;
     } catch {
       setError("เกิดข้อผิดพลาดในการเชื่อมต่อระบบ");
     } finally {

@@ -4,6 +4,7 @@ import { getProviders, signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebook, FaLine } from "react-icons/fa";
+import { continueUrl } from "@/lib/authRedirect";
 
 type ProviderId = "facebook" | "google" | "line" | "apple";
 
@@ -20,7 +21,7 @@ const PROVIDERS: { id: ProviderId; label: string; icon: React.ReactNode }[] = [
  */
 export default function SocialLoginButtons({
   mode = "login",
-  callbackUrl = "/",
+  callbackUrl,
 }: {
   mode?: "login" | "register";
   callbackUrl?: string;
@@ -63,7 +64,8 @@ export default function SocialLoginButtons({
             disabled={pending !== null}
             onClick={() => {
               setPending(p.id);
-              signIn(p.id, { callbackUrl });
+              // ไม่ระบุปลายทาง → ไปหน้ากลาง /auth/continue (แอดมินไป /admin, ลูกค้ากลับหน้าเดิม)
+              signIn(p.id, { callbackUrl: callbackUrl ?? continueUrl() });
             }}
             className="flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-slate-100 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-60"
           >
