@@ -1,68 +1,38 @@
 import { prisma } from "@/lib/prisma";
-import CategoryManager from "./CategoryManager";
+import { AdminPage, PageHeader } from "@/components/admin/ui";
+import CategoryManager, { type CategoryNode } from "./CategoryManager";
+
+export const dynamic = "force-dynamic";
 
 export default async function CategoriesPage() {
   const categories = await prisma.category.findMany({
-    where: {
-      parentId: null,
-    },
+    where: { parentId: null },
     include: {
+      _count: { select: { products: true } },
       children: {
+        include: { _count: { select: { products: true } } },
         orderBy: [{ order: "asc" }, { name: "asc" }],
       },
     },
     orderBy: [{ order: "asc" }, { name: "asc" }],
   });
 
+  const tree: CategoryNode[] = categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    products: c._count.products,
+    children: c.children.map((ch) => ({ id: ch.id, name: ch.name, products: ch._count.products })),
+  }));
+
+  const subCount = tree.reduce((s, c) => s + c.children.length, 0);
+
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 lg:py-8">
-      {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold">จัดการหมวดหมู่สินค้า</h1>
-
-        <p className="text-gray-500 mt-2">
-          เพิ่ม แก้ไข ลบ และลากเพื่อจัดลำดับการแสดงหมวดหมู่สินค้า
-        </p>
-      </div>
-
-      {/* Add Category */}
-      <div className="bg-white border rounded-2xl shadow-sm p-6 mb-10">
-        <h2 className="text-xl font-bold mb-5">➕ เพิ่มหมวดหมู่ใหม่</h2>
-
-        <form
-          action="/api/categories"
-          method="POST"
-          className="flex flex-wrap gap-3"
-        >
-          <input
-            type="text"
-            name="name"
-            placeholder="ชื่อหมวดหมู่"
-            required
-            className="flex-1 min-w-250px border rounded-xl px-4 py-3"
-          />
-
-          <select
-            name="parentId"
-            className="border rounded-xl px-4 py-3 min-w-220px"
-          >
-            <option value="">หมวดหลัก</option>
-
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-
-          <button className="bg-brand-600 hover:bg-brand-700 text-white px-6 py-3 rounded-xl font-medium">
-            เพิ่มหมวดหมู่
-          </button>
-        </form>
-      </div>
-
-      {/* Categories - ลากเพื่อจัดลำดับได้ */}
-      <CategoryManager initialCategories={categories} />
-    </main>
+    <AdminPage>
+      <PageHeader
+        title="หมวดหมู่สินค้า"
+        description={`หมวดหลัก ${tree.length} หมวด · หมวดย่อย ${subCount} หมวด — ลำดับในหน้านี้คือลำดับที่ลูกค้าเห็นบนหน้าร้าน`}
+      />
+      <CategoryManager initialCategories={tree} />
+    </AdminPage>
   );
 }

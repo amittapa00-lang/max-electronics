@@ -1,35 +1,23 @@
 import { requireAdmin } from "@/lib/authz";
-import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import { NextResponse } from "next/server";
+import { CategoryError, createCategory } from "@/lib/categoryAdmin";
 
-export async function POST(
-  req: Request
-) {
+export const dynamic = "force-dynamic";
+
+/** เพิ่มหมวดหมู่ — JSON { name, parentId? } */
+export async function POST(req: Request) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
-  const formData =
-    await req.formData();
-
-  const name =
-    formData.get("name") as string;
-
-  if (!name) {
-    return Response.json(
-      {
-        error: "กรอกชื่อหมวดหมู่",
-      },
-      {
-        status: 400,
-      }
-    );
+  try {
+    const isJson = req.headers.get("content-type")?.includes("application/json");
+    const body = isJson ? await req.json() : Object.fromEntries(await req.formData());
+    const category = await createCategory({ name: body.name, parentId: body.parentId });
+    if (!isJson) return NextResponse.redirect(new URL("/admin/categories", req.url), 303);
+    return NextResponse.json({ success: true, category });
+  } catch (err) {
+    if (err instanceof CategoryError) return NextResponse.json({ error: err.message }, { status: err.httpStatus });
+    console.error(err);
+    return NextResponse.json({ error: "เพิ่มหมวดหมู่ไม่สำเร็จ" }, { status: 500 });
   }
-
-  await prisma.category.create({
-    data: {
-      name,
-    },
-  });
-
-  redirect("/admin/categories");
 }
