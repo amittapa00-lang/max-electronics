@@ -103,19 +103,20 @@ export default async function CheckoutPage() {
           <div style={card}>
             <SectionLabel icon="🏦" text="บัญชีโอนเงิน" />
             <BankRow label="ธนาคาร" value="กสิกรไทย" />
-            <BankRow label="ชื่อบัญชี" value="MAX Electronics" />
+            <BankRow label="ชื่อบัญชี" value="นาง เบญจมาศ ไชยวุฒิภัทร" />
+            <BankRow label="สาขา" value="โรบินสัน สมุทรปราการ" />
             <div style={{
               fontSize: 17, fontWeight: 500, color: "#0C447C",
               background: "#E6F1FB", borderRadius: 8,
               padding: "10px 14px", textAlign: "center",
               letterSpacing: "0.04em", margin: "10px 0",
             }}>
-              123-4-56789-0
+              241-8-87380-1
             </div>
             <img
-              src="/qr-payment.jpg"
-              alt="QR พร้อมเพย์"
-              style={{ width: 120, display: "block", margin: "0 auto", borderRadius: 8, border: "0.5px solid #e5e7eb" }}
+              src="/qr-payment-kbank.png"
+              alt="QR พร้อมเพย์ — นาง เบญจมาศ ไชยวุฒิภัทร"
+              style={{ width: "100%", maxWidth: 220, display: "block", margin: "0 auto", borderRadius: 8, border: "0.5px solid #e5e7eb" }}
             />
           </div>
 
