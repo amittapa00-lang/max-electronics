@@ -71,7 +71,7 @@ export default function CategoryManager({
           className="bg-white border rounded-2xl shadow-sm overflow-hidden cursor-move"
         >
           {/* Main Category */}
-          <div className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-white">
+          <div className="flex items-center justify-between p-6 bg-gradient-to-r from-brand-50 to-white">
             <div className="flex items-center gap-3">
               <span
                 className="text-gray-400 select-none"
@@ -80,7 +80,7 @@ export default function CategoryManager({
                 ⠿
               </span>
 
-              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-2xl">
+              <div className="w-12 h-12 rounded-xl bg-brand-100 flex items-center justify-center text-2xl">
                 📁
               </div>
 
@@ -95,7 +95,7 @@ export default function CategoryManager({
             <div className="flex gap-2">
               <Link
                 href={`/admin/categories/${cat.id}/edit`}
-                className="px-4 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium"
+                className="px-4 py-2 rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 font-medium"
               >
                 ✏️ แก้ไข
               </Link>
@@ -171,7 +171,7 @@ function SubCategoryList({
           <div className="flex gap-3">
             <Link
               href={`/admin/categories/${sub.id}/edit`}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="text-brand-600 hover:text-brand-800 text-sm font-medium"
             >
               แก้ไข
             </Link>

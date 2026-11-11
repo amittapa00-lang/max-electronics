@@ -1,9 +1,13 @@
+import { requireAdmin } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 export async function POST(
   req: Request
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const formData =
     await req.formData();
 

@@ -1,7 +1,11 @@
+import { requireAdmin } from "@/lib/authz";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const { items } = (await req.json()) as {
       items: { id: number; order: number }[];

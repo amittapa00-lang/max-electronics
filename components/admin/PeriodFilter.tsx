@@ -42,9 +42,9 @@ export default function PeriodFilter() {
           <button
             key={p.value}
             onClick={() => updateParams({ period: p.value })}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`w-auto px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               period === p.value
-                ? "bg-white shadow text-blue-600"
+                ? "bg-white shadow text-brand-700"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >

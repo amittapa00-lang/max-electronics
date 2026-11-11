@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { calcShippingFee } from "@/lib/shipping";
+import { notifyOrderStatus } from "@/lib/orderNotify";
 
 export async function POST(req: Request) {
   try {
@@ -89,6 +90,9 @@ export async function POST(req: Request) {
         userId: user.id,
       },
     });
+
+    // แจ้งลูกค้าทางอีเมลว่าได้รับคำสั่งซื้อแล้ว (ส่งหลังตอบกลับ)
+    notifyOrderStatus(order.id, order.status);
 
     // =========================
     // ส่งอีเมลแจ้งเตือน Admin

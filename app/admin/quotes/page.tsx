@@ -79,7 +79,7 @@ export default async function QuotesPage({
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-6 py-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 lg:py-8">
         {/* Header */}
         <div className="mb-8">
           <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -209,7 +209,7 @@ export default async function QuotesPage({
                         <td className="whitespace-nowrap px-5 py-4 text-right">
                           <Link
                             href={`/admin/quotes/${quote.id}`}
-                            className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+                            className="font-medium text-brand-600 hover:text-brand-700 hover:underline"
                           >
                             ดูรายละเอียด →
                           </Link>

@@ -15,7 +15,7 @@ export default async function CategoriesPage() {
   });
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-10">
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 lg:py-8">
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold">จัดการหมวดหมู่สินค้า</h1>
@@ -55,7 +55,7 @@ export default async function CategoriesPage() {
             ))}
           </select>
 
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium">
+          <button className="bg-brand-600 hover:bg-brand-700 text-white px-6 py-3 rounded-xl font-medium">
             เพิ่มหมวดหมู่
           </button>
         </form>

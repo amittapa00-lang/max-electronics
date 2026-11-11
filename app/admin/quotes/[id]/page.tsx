@@ -67,7 +67,7 @@ export default async function QuoteDetailPage({
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-5xl px-6 py-10">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 lg:py-8">
         {/* Header */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -96,7 +96,7 @@ export default async function QuoteDetailPage({
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
                   👤
                 </span>
                 <h2 className="text-base font-semibold text-slate-900">
@@ -157,7 +157,7 @@ export default async function QuoteDetailPage({
                 <dd className="col-span-2 text-sm text-slate-700">
                   <a
                     href={`mailto:${quote.email}`}
-                    className="text-indigo-600 hover:underline"
+                    className="text-brand-600 hover:underline"
                   >
                     {quote.email}
                   </a>
@@ -169,7 +169,7 @@ export default async function QuoteDetailPage({
                 <dd className="col-span-2 text-sm text-slate-700">
                   <a
                     href={`tel:${quote.phone}`}
-                    className="text-indigo-600 hover:underline"
+                    className="text-brand-600 hover:underline"
                   >
                     {quote.phone}
                   </a>
@@ -206,7 +206,7 @@ export default async function QuoteDetailPage({
           {/* ขวา: สินค้า */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
                 📦
               </span>
               <h2 className="text-base font-semibold text-slate-900">สินค้า</h2>
@@ -245,7 +245,7 @@ export default async function QuoteDetailPage({
                     ขอใบเสนอราคา
                   </div>
                 ) : (
-                  <div className="text-2xl font-bold text-indigo-600">
+                  <div className="text-2xl font-bold text-brand-600">
                     ฿ {quote.product.price.toLocaleString()}
                   </div>
                 )}

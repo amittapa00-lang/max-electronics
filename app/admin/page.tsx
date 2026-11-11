@@ -1,114 +1,86 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import Container from "@/components/Container";
+import {
+  AlertTriangle,
+  Eye,
+  FileText,
+  PackageCheck,
+  PackageX,
+  Plus,
+  ShoppingBag,
+  TrendingUp,
+  Truck,
+  Wallet,
+} from "lucide-react";
 import PeriodFilter from "@/components/admin/PeriodFilter";
 import SalesTrendChart from "@/components/admin/SalesTrendChart";
-import {
-  getPeriodRange,
-  bucketItems,
-  startOfDay,
-  startOfWeek,
-  startOfMonth,
-  startOfYear,
-  type Period,
-} from "@/lib/dateRange";
+import OrderStatusBadge from "@/components/OrderStatusBadge";
+import { AdminPage, Card, PageHeader, StatCard, btn } from "@/components/admin/ui";
+import { getPeriodRange, bucketItems, startOfDay, startOfMonth, type Period } from "@/lib/dateRange";
 
-export default async function AdminPage({
+const sumTotal = (orders: { total: number }[]) => orders.reduce((s, o) => s + Number(o.total || 0), 0);
+
+const dateFmt = new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
+const todayFmt = new Intl.DateTimeFormat("th-TH", { dateStyle: "full", timeZone: "Asia/Bangkok" });
+
+export default async function AdminDashboard({
   searchParams,
 }: {
-  // Next.js 15: searchParams เป็น Promise
   searchParams: Promise<{ period?: string; date?: string }>;
 }) {
-  const session = await getServerSession(authOptions);
-
-  if (!session || (session.user as { role?: string }).role !== "ADMIN") {
-    redirect("/");
-  }
-
   const { period: periodParam, date: dateParam } = await searchParams;
-  const period: Period = (["day", "week", "month", "year"].includes(
-    periodParam || ""
-  )
-    ? periodParam
-    : "month") as Period;
+  const period: Period = (["day", "week", "month", "year"].includes(periodParam || "") ? periodParam : "month") as Period;
 
-  const productCount = await prisma.product.count();
+  const now = new Date();
+  const notCancelled = { status: { not: "CANCELLED" } };
+  const { start: rangeStart, end: rangeEnd, label: rangeLabel } = getPeriodRange(period, dateParam);
 
-  const userCount = await prisma.user.count({
-    where: { role: "USER" },
+  const [
+    statusCounts,
+    quotesPending,
+    outOfStock,
+    lowStock,
+    todayOrders,
+    monthOrders,
+    ordersInRange,
+    visitorsToday,
+    visitorsMonth,
+    recentOrders,
+    bestAgg,
+  ] = await Promise.all([
+    prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.quote.count({ where: { status: "PENDING" } }),
+    prisma.product.findMany({ where: { stock: 0, quotationOnly: false }, orderBy: { name: "asc" }, select: { id: true, name: true, stock: true } }),
+    prisma.product.findMany({ where: { stock: { gt: 0, lte: 5 } }, orderBy: { stock: "asc" }, select: { id: true, name: true, stock: true } }),
+    prisma.order.findMany({ where: { createdAt: { gte: startOfDay(now) }, ...notCancelled }, select: { total: true } }),
+    prisma.order.findMany({ where: { createdAt: { gte: startOfMonth(now) }, ...notCancelled }, select: { total: true } }),
+    prisma.order.findMany({
+      where: { createdAt: { gte: rangeStart, lt: rangeEnd }, ...notCancelled },
+      select: { createdAt: true, total: true },
+    }),
+    prisma.pageView.count({ where: { createdAt: { gte: startOfDay(now) } } }),
+    prisma.pageView.count({ where: { createdAt: { gte: startOfMonth(now) } } }),
+    prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 6, select: { id: true, name: true, total: true, status: true, createdAt: true } }),
+    prisma.orderItem.groupBy({
+      by: ["productId"],
+      where: { order: notCancelled },
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: "desc" } },
+      take: 5,
+    }),
+  ]);
+
+  const count = (s: string) => statusCounts.find((c) => c.status === s)?._count._all ?? 0;
+  const bestNames = await prisma.product.findMany({
+    where: { id: { in: bestAgg.map((b) => b.productId) } },
+    select: { id: true, name: true },
   });
-
-  const orderCount = await prisma.order.count();
-
-  const orders = await prisma.order.findMany();
-
-  // ป้องกัน Error จากค่า Decimal ของ Prisma ด้วยการครอบ Number()
-  const totalSales = orders.reduce(
-    (sum, order) => sum + Number(order.total || 0),
-    0
-  );
-
-  const today = new Date();
-  const startOfToday = startOfDay(today);
-
-  // ========== 1) สถิติผู้เข้าชมเว็บ (วัน / สัปดาห์ / เดือน / ปี) ==========
-  const [visitorsToday, visitorsWeek, visitorsMonth, visitorsYear] =
-    await Promise.all([
-      prisma.pageView.count({ where: { createdAt: { gte: startOfToday } } }),
-      prisma.pageView.count({
-        where: { createdAt: { gte: startOfWeek(today) } },
-      }),
-      prisma.pageView.count({
-        where: { createdAt: { gte: startOfMonth(today) } },
-      }),
-      prisma.pageView.count({
-        where: { createdAt: { gte: startOfYear(today) } },
-      }),
-    ]);
-
-  const todayOrders = await prisma.order.findMany({
-    where: {
-      createdAt: { gte: startOfToday },
-      status: { not: "CANCELLED" },
-    },
-  });
-
-  const monthOrders = await prisma.order.findMany({
-    where: {
-      createdAt: { gte: startOfMonth(today) },
-      status: { not: "CANCELLED" },
-    },
-  });
-
-  const todaySales = todayOrders.reduce(
-    (sum, order) => sum + Number(order.total || 0),
-    0
-  );
-
-  const monthSales = monthOrders.reduce(
-    (sum, order) => sum + Number(order.total || 0),
-    0
-  );
-
-  // ========== 2) รายงานยอดขายแบบเลือกช่วงเวลาได้ ==========
-  const { start: rangeStart, end: rangeEnd, label: rangeLabel } =
-    getPeriodRange(period, dateParam);
-
-  const ordersInRange = await prisma.order.findMany({
-    where: {
-      createdAt: { gte: rangeStart, lt: rangeEnd },
-      status: { not: "CANCELLED" },
-    },
-  });
-
-  const rangeSalesTotal = ordersInRange.reduce(
-    (sum, order) => sum + Number(order.total || 0),
-    0
-  );
+  const bestSelling = bestAgg.map((b) => ({
+    id: b.productId,
+    name: bestNames.find((p) => p.id === b.productId)?.name ?? "ไม่พบสินค้า",
+    qty: b._sum.quantity ?? 0,
+  }));
 
   const salesChartData = bucketItems(
     ordersInRange.map((o) => ({ createdAt: o.createdAt, total: Number(o.total || 0) })),
@@ -118,270 +90,171 @@ export default async function AdminPage({
     (o) => o.total
   );
 
-  // ========== 3) สินค้าขายดี / สินค้าขายไม่ได้ ==========
-  const bestProducts = await prisma.orderItem.groupBy({
-    by: ["productId"],
-    _sum: { quantity: true },
-    orderBy: { _sum: { quantity: "desc" } },
-    take: 5,
-  });
-
-  const bestSelling = await Promise.all(
-    bestProducts.map(async (item) => {
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId },
-      });
-      return { name: product?.name || "ไม่พบสินค้า", qty: item._sum.quantity || 0 };
-    })
-  );
-
-  // productId ทั้งหมดที่เคยขายได้ (ไม่นับออเดอร์ที่ถูกยกเลิก)
-  const soldAgg = await prisma.orderItem.groupBy({
-    by: ["productId"],
-    where: { order: { status: { not: "CANCELLED" } } },
-    _sum: { quantity: true },
-  });
-  const soldProductIds = soldAgg
-    .filter((s) => (s._sum.quantity || 0) > 0)
-    .map((s) => s.productId);
-
-  const neverSoldProducts = await prisma.product.findMany({
-    where: { id: { notIn: soldProductIds } },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
-
-  const totalStock = await prisma.product.aggregate({ _sum: { stock: true } });
-
-  const outOfStockProducts = await prisma.product.findMany({
-    where: { stock: 0 },
-    orderBy: { name: "asc" },
-  });
-
-  const lowStockProducts = await prisma.product.findMany({
-    where: { stock: { gt: 0, lte: 5 } },
-    orderBy: { stock: "asc" },
-  });
-
-  const todayItems = await prisma.orderItem.groupBy({
-    by: ["productId"],
-    where: {
-      order: { createdAt: { gte: startOfToday }, status: { not: "CANCELLED" } },
-    },
-    _sum: { quantity: true },
-  });
-
-  const todayProductSales = await Promise.all(
-    todayItems.map(async (item) => {
-      const product = await prisma.product.findUnique({ where: { id: item.productId } });
-      const price = Number(product?.price || 0);
-      const qty = item._sum.quantity || 0;
-      return { name: product?.name || "ไม่พบสินค้า", price, qty, total: price * qty };
-    })
-  );
+  const todo = [
+    { label: "รอตรวจสลิป", value: count("WAITING_VERIFY"), icon: Wallet, href: "/admin/orders?status=WAITING_VERIFY" },
+    { label: "รอแพ็กสินค้า", value: count("PAID"), icon: PackageCheck, href: "/admin/orders?status=PAID" },
+    { label: "รอใส่เลขพัสดุ", value: count("PREPARING"), icon: Truck, href: "/admin/orders?status=PREPARING" },
+    { label: "ใบเสนอราคาใหม่", value: quotesPending, icon: FileText, href: "/admin/quotes?status=PENDING" },
+    { label: "สินค้าหมด", value: outOfStock.length, icon: PackageX, href: "/admin/products?stock=out" },
+  ];
+  const todoTotal = todo.reduce((s, t) => s + t.value, 0);
 
   return (
-    <Container>
-      <main className="max-w-7xl mx-auto px-6 py-10 bg-linear-to-br from-slate-50 to-blue-50 min-h-screen">
-        <div className="mb-10">
-          <h1 className="text-5xl font-extrabold text-slate-800">Admin Dashboard</h1>
-          <p className="text-slate-500 mt-2">ระบบจัดการร้านค้าและสรุปสถิติภาพรวม</p>
-        </div>
-
-        {/* เมนูจัดการ */}
-        <div className="grid md:grid-cols-3 gap-6 mb-10">
-          <Link href="/admin/products" className="bg-white border rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all">
-            <h2 className="text-xl font-bold">📦 จัดการสินค้า</h2>
-            <p className="text-gray-500 mt-2">เพิ่ม / แก้ไข / ลบสินค้า</p>
+    <AdminPage wide>
+      <PageHeader
+        title="ภาพรวมร้าน"
+        description={todayFmt.format(now)}
+        actions={
+          <Link href="/admin/products/new" className={btn.primary}>
+            <Plus className="h-4 w-4" /> เพิ่มสินค้า
           </Link>
-          <Link href="/admin/orders" className="bg-white border rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all">
-            <h2 className="text-xl font-bold">🛒 ออเดอร์</h2>
-            <p className="text-gray-500 mt-2">ตรวจสอบคำสั่งซื้อ</p>
-          </Link>
-          <Link href="/admin/users" className="bg-white border rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-all">
-            <h2 className="text-xl font-bold">👤 สมาชิก</h2>
-            <p className="text-gray-500 mt-2">จัดการสมาชิก</p>
-          </Link>
-        </div>
+        }
+      />
 
-        {/* สถิติ */}
-        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-6 mb-10">
-          <div className="bg-blue-50 border rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-slate-700">📦 สินค้า</h2>
-            <p className="text-4xl font-bold mt-3">{productCount}</p>
-          </div>
-          <div className="bg-green-50 border rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-slate-700">🛒 ออเดอร์</h2>
-            <p className="text-4xl font-bold mt-3">{orderCount}</p>
-          </div>
-          <div className="bg-yellow-50 border rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-slate-700">👤 สมาชิก</h2>
-            <p className="text-4xl font-bold mt-3">{userCount}</p>
-          </div>
-          <div className="bg-cyan-50 border rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-slate-700">📦 สต็อกรวม</h2>
-            <p className="text-4xl font-bold mt-3">{totalStock._sum.stock || 0}</p>
-          </div>
-          <div className="bg-purple-50 border rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-slate-700">💰 ยอดขายรวม</h2>
-            <p className="text-3xl font-bold mt-3">฿{totalSales.toLocaleString()}</p>
-          </div>
-          <div className="bg-green-100 border rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-slate-700">💵 วันนี้</h2>
-            <p className="text-3xl font-bold mt-3 text-green-600">฿{todaySales.toLocaleString()}</p>
-          </div>
-          <div className="bg-blue-100 border rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-slate-700">📅 เดือนนี้</h2>
-            <p className="text-3xl font-bold mt-3 text-blue-600">฿{monthSales.toLocaleString()}</p>
-          </div>
-        </div>
-
-        {/* ========== ผู้เข้าชมเว็บ ========== */}
-        <div className="bg-white border rounded-2xl p-6 shadow-sm mb-10">
-          <h2 className="text-2xl font-bold mb-6">👁️ ผู้เข้าชมเว็บไซต์</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="bg-slate-50 rounded-xl p-5">
-              <p className="text-slate-500 text-sm">วันนี้</p>
-              <p className="text-3xl font-bold mt-2 text-slate-800">{visitorsToday.toLocaleString()}</p>
-            </div>
-            <div className="bg-slate-50 rounded-xl p-5">
-              <p className="text-slate-500 text-sm">สัปดาห์นี้</p>
-              <p className="text-3xl font-bold mt-2 text-slate-800">{visitorsWeek.toLocaleString()}</p>
-            </div>
-            <div className="bg-slate-50 rounded-xl p-5">
-              <p className="text-slate-500 text-sm">เดือนนี้</p>
-              <p className="text-3xl font-bold mt-2 text-slate-800">{visitorsMonth.toLocaleString()}</p>
-            </div>
-            <div className="bg-slate-50 rounded-xl p-5">
-              <p className="text-slate-500 text-sm">ปีนี้</p>
-              <p className="text-3xl font-bold mt-2 text-slate-800">{visitorsYear.toLocaleString()}</p>
-            </div>
-          </div>
-          <p className="text-xs text-slate-400 mt-4">
-            * นับจากจำนวนครั้งที่เปิดหน้าเว็บ (page view) ต้องติดตั้ง PageViewTracker ใน layout ก่อนจึงจะมีข้อมูล
-          </p>
-        </div>
-
-        {/* ========== รายงานยอดขาย (เลือกช่วงเวลาได้) ========== */}
-        <div id="sales-report" className="bg-white border rounded-2xl p-6 shadow-sm mb-10">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <h2 className="text-2xl font-bold">📊 รายงานยอดขาย</h2>
-            <Suspense fallback={<div className="h-10" />}>
-              <PeriodFilter />
-            </Suspense>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <div>
-              <p className="text-slate-500 text-sm">ช่วงที่เลือก</p>
-              <p className="font-semibold text-slate-700">{rangeLabel}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-slate-500 text-sm">ยอดขายรวมช่วงนี้</p>
-              <p className="text-2xl font-bold text-green-600">฿{rangeSalesTotal.toLocaleString()}</p>
-              <p className="text-xs text-slate-400">{ordersInRange.length} ออเดอร์</p>
-            </div>
-          </div>
-
-          <SalesTrendChart data={salesChartData} />
-        </div>
-
-        {/* สินค้าหมด + ใกล้หมด */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-10">
-          <div className="bg-white border rounded-2xl p-6 shadow-sm">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">❌ สินค้าหมด</h2>
-            {outOfStockProducts.length === 0 ? (
-              <p className="text-green-600">ไม่มีสินค้าหมด</p>
-            ) : (
-              <div className="space-y-3">
-                {outOfStockProducts.map((product) => (
-                  <div key={product.id} className="flex justify-between border-b pb-2">
-                    <span>{product.name}</span>
-                    <span className="font-bold text-red-600">0 ชิ้น</span>
-                  </div>
-                ))}
+      {/* งานที่ต้องทำ */}
+      <section className="mb-6">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+          งานที่ต้องทำ
+          {todoTotal === 0 && <span className="font-normal text-emerald-600">— ไม่มีงานค้าง</span>}
+        </h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {todo.map((t) => (
+            <Link
+              key={t.label}
+              href={t.href}
+              className={`flex items-center gap-3 rounded-xl border p-4 transition hover:shadow-sm ${
+                t.value > 0 ? "border-brand-200 bg-brand-50 hover:border-brand-300" : "border-slate-200 bg-white hover:border-slate-300"
+              }`}
+            >
+              <t.icon className={`h-6 w-6 shrink-0 ${t.value > 0 ? "text-brand-600" : "text-slate-300"}`} />
+              <div className="min-w-0">
+                <p className={`text-2xl font-bold ${t.value > 0 ? "text-brand-700" : "text-slate-400"}`}>{t.value}</p>
+                <p className="truncate text-xs font-medium text-slate-600">{t.label}</p>
               </div>
-            )}
-          </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-          <div className="bg-white border rounded-2xl p-6 shadow-sm">
-            <h2 className="text-2xl font-bold text-orange-600 mb-4">⚠️ สินค้าใกล้หมด</h2>
-            {lowStockProducts.length === 0 ? (
-              <p className="text-green-600">ไม่มีสินค้าใกล้หมด</p>
-            ) : (
-              <div className="space-y-3">
-                {lowStockProducts.map((product) => (
-                  <div key={product.id} className="flex justify-between border-b pb-2">
-                    <span>{product.name}</span>
-                    <span className="font-bold text-orange-600">เหลือ {product.stock} ชิ้น</span>
-                  </div>
-                ))}
-              </div>
-            )}
+      {/* ตัวเลขหลัก */}
+      <section className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard label="ยอดสั่งซื้อวันนี้" value={`฿${sumTotal(todayOrders).toLocaleString()}`} sub={`${todayOrders.length} คำสั่งซื้อ`} icon={TrendingUp} tone="emerald" />
+        <StatCard label="ยอดสั่งซื้อเดือนนี้" value={`฿${sumTotal(monthOrders).toLocaleString()}`} sub={`${monthOrders.length} คำสั่งซื้อ`} icon={ShoppingBag} tone="brand" />
+        <StatCard label="กำลังจัดส่ง" value={count("SHIPPING")} sub="รอลูกค้าได้รับ" icon={Truck} tone="sky" href="/admin/orders?status=SHIPPING" />
+        <StatCard label="ผู้เข้าชมวันนี้" value={visitorsToday.toLocaleString()} sub={`เดือนนี้ ${visitorsMonth.toLocaleString()} ครั้ง`} icon={Eye} tone="slate" />
+      </section>
+
+      {/* รายงานยอดขาย */}
+      <Card
+        className="mb-6"
+        title="รายงานยอดขาย"
+        action={
+          <Suspense fallback={<div className="h-10" />}>
+            <PeriodFilter />
+          </Suspense>
+        }
+      >
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs text-slate-500">ช่วงที่เลือก</p>
+            <p className="font-semibold text-slate-800">{rangeLabel}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold text-slate-900">฿{sumTotal(ordersInRange).toLocaleString()}</p>
+            <p className="text-xs text-slate-500">{ordersInRange.length} คำสั่งซื้อ (ไม่รวมที่ยกเลิก)</p>
           </div>
         </div>
+        <SalesTrendChart data={salesChartData} />
+      </Card>
 
-        {/* รายงานยอดขายวันนี้ */}
-        <div className="bg-white border rounded-2xl p-6 shadow-sm mb-10">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">📊 รายงานยอดขายวันนี้</h2>
-            <div className="text-green-600 font-semibold">฿{todaySales.toLocaleString()}</div>
-          </div>
-
-          {todayProductSales.length === 0 ? (
-            <p className="text-gray-500">วันนี้ยังไม่มีรายการขาย</p>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* คำสั่งซื้อล่าสุด */}
+        <Card
+          title="คำสั่งซื้อล่าสุด"
+          padded={false}
+          action={
+            <Link href="/admin/orders?status=all" className="text-sm font-medium text-brand-700 hover:underline">
+              ดูทั้งหมด
+            </Link>
+          }
+        >
+          {recentOrders.length === 0 ? (
+            <p className="px-5 py-8 text-center text-sm text-slate-500">ยังไม่มีคำสั่งซื้อ</p>
           ) : (
-            <div className="space-y-3">
-              {todayProductSales.map((item, index) => (
-                <div key={index} className="flex justify-between items-center border-b pb-3">
-                  <div>
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-gray-500">ขาย {item.qty} ชิ้น</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-green-600">฿{item.total.toLocaleString()}</div>
-                  </div>
-                </div>
+            <ul className="divide-y divide-slate-100">
+              {recentOrders.map((o) => (
+                <li key={o.id}>
+                  <Link href={`/admin/orders/${o.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-900">
+                        #{o.id} <span className="font-normal text-slate-600">{o.name}</span>
+                      </p>
+                      <p className="text-xs text-slate-500">{dateFmt.format(o.createdAt)}</p>
+                    </div>
+                    <OrderStatusBadge status={o.status} />
+                    <span className="w-20 text-right text-sm font-semibold text-slate-900">฿{o.total.toLocaleString()}</span>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
-        </div>
+        </Card>
 
-        {/* ========== สินค้าขายดี / สินค้าขายไม่ได้ ========== */}
-        <div className="grid lg:grid-cols-2 gap-8">
-          <div className="bg-white border rounded-2xl p-6 shadow-sm">
-            <h2 className="text-2xl font-bold mb-6">🔥 สินค้าขายดี</h2>
-            {bestSelling.length === 0 ? (
-              <p className="text-gray-500">ยังไม่มีข้อมูลการขาย</p>
-            ) : (
-              <div className="space-y-4">
-                {bestSelling.map((product, index) => (
-                  <div key={index} className="flex justify-between border-b pb-3">
-                    <span>{index + 1}. {product.name}</span>
-                    <span className="font-bold text-blue-600">{product.qty} ชิ้น</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        {/* สต็อก */}
+        <Card
+          title={
+            <span className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" /> สินค้าที่ต้องเติมสต็อก
+            </span>
+          }
+          padded={false}
+          action={
+            <Link href="/admin/products?stock=low" className="text-sm font-medium text-brand-700 hover:underline">
+              จัดการสต็อก
+            </Link>
+          }
+        >
+          {outOfStock.length + lowStock.length === 0 ? (
+            <p className="px-5 py-8 text-center text-sm text-emerald-600">สต็อกเพียงพอทุกรายการ</p>
+          ) : (
+            <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto">
+              {[...outOfStock, ...lowStock].map((p) => (
+                <li key={p.id}>
+                  <Link href={`/admin/products/edit/${p.id}`} className="flex items-center justify-between gap-3 px-5 py-2.5 hover:bg-slate-50">
+                    <span className="line-clamp-1 text-sm text-slate-800">{p.name}</span>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        p.stock === 0 ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      {p.stock === 0 ? "หมด" : `เหลือ ${p.stock}`}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
 
-          <div className="bg-white border rounded-2xl p-6 shadow-sm">
-            <h2 className="text-2xl font-bold text-slate-500 mb-6">💤 สินค้าขายไม่ได้</h2>
-            {neverSoldProducts.length === 0 ? (
-              <p className="text-green-600">ทุกสินค้าขายได้แล้ว 🎉</p>
-            ) : (
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                {neverSoldProducts.map((product) => (
-                  <div key={product.id} className="flex justify-between border-b pb-2">
-                    <span>{product.name}</span>
-                    <span className="text-xs text-slate-400">สต็อก {product.stock}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-    </Container>
+        {/* ขายดี */}
+        <Card title="สินค้าขายดี (จำนวนชิ้น)" padded={false}>
+          {bestSelling.length === 0 ? (
+            <p className="px-5 py-8 text-center text-sm text-slate-500">ยังไม่มีข้อมูลการขาย</p>
+          ) : (
+            <ol className="divide-y divide-slate-100">
+              {bestSelling.map((p, i) => (
+                <li key={p.id} className="flex items-center gap-3 px-5 py-2.5">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
+                    {i + 1}
+                  </span>
+                  <span className="line-clamp-1 flex-1 text-sm text-slate-800">{p.name}</span>
+                  <span className="text-sm font-semibold text-slate-900">{p.qty} ชิ้น</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Card>
+      </div>
+    </AdminPage>
   );
 }

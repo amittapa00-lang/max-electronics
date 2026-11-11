@@ -22,7 +22,7 @@ export default async function EditCategoryPage({
   }
 
   return (
-    <main className="max-w-xl mx-auto py-10">
+    <main className="max-w-xl mx-auto px-4 py-6 lg:py-8">
 
       <h1 className="text-3xl font-bold mb-6">
         แก้ไขหมวดหมู่
@@ -52,7 +52,7 @@ export default async function EditCategoryPage({
         <button
           className="
             mt-4
-            bg-blue-600
+            bg-brand-600
             text-white
             px-6
             py-3

@@ -39,7 +39,7 @@ export default function SalesTrendChart({ data }: { data: Point[] }) {
             labelStyle={{ color: "#334155" }}
             contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }}
           />
-          <Bar dataKey="total" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="total" fill="#d71920" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

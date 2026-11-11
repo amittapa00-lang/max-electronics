@@ -71,14 +71,14 @@ export default function QuoteFilters({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="ค้นหาบริษัท ผู้ติดต่อ หรือชื่อสินค้า"
-          className="w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
         />
       </div>
 
       <select
         value={defaultStatus}
         onChange={(e) => updateParams({ status: e.target.value })}
-        className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 sm:w-56"
+        className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-56"
       >
         {statusOptions.map((opt) => (
           <option key={opt.value} value={opt.value}>

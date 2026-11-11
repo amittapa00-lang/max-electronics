@@ -68,6 +68,11 @@
     }
   }
 
+  /* หลังร้าน: ปุ่มไม่ยืดเต็มจอโดยปริยาย (ใช้คลาส w-full เมื่อต้องการ) */
+  .admin-root button {
+    width: auto;
+  }
+
   button,
   [role="button"] {
     cursor: pointer;

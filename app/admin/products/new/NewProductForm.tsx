@@ -117,7 +117,7 @@ export default function NewProductForm({
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 bg-slate-50 min-h-screen rounded-2xl shadow-xs mt-6 border border-slate-100">
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 lg:py-8">
       <div className="mb-8">
         <h1 className="text-3xl sm:text-4xl font-black text-slate-800">
           📦 เพิ่มสินค้าใหม่
@@ -138,7 +138,7 @@ export default function NewProductForm({
               placeholder="ตัวอย่าง: สายไฟทองแดง THW 1x1.5"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-blue-500 focus:ring-3 focus:ring-blue-100 outline-none transition-all text-sm sm:text-base"
+              className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-brand-500 focus:ring-3 focus:ring-brand-100 outline-none transition-all text-sm sm:text-base"
               required
             />
           </div>
@@ -150,7 +150,7 @@ export default function NewProductForm({
               placeholder="ตัวอย่าง: MAX-THW-001"
               value={productCode}
               onChange={(e) => setProductCode(e.target.value)}
-              className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-blue-500 focus:ring-3 focus:ring-blue-100 outline-none transition-all text-sm sm:text-base"
+              className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-brand-500 focus:ring-3 focus:ring-brand-100 outline-none transition-all text-sm sm:text-base"
               required
             />
           </div>
@@ -163,7 +163,7 @@ export default function NewProductForm({
             placeholder="อธิบายคุณสมบัติ ขนาด แรงดันไฟฟ้า หรือข้อมูลทางเทคนิคของอุปกรณ์..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full border border-slate-200 p-3 rounded-xl bg-white h-36 focus:border-blue-500 focus:ring-3 focus:ring-blue-100 outline-none transition-all text-sm sm:text-base resize-y"
+            className="w-full border border-slate-200 p-3 rounded-xl bg-white h-36 focus:border-brand-500 focus:ring-3 focus:ring-brand-100 outline-none transition-all text-sm sm:text-base resize-y"
           />
         </div>
 
@@ -184,7 +184,7 @@ export default function NewProductForm({
   }
   value={price}
   onChange={(e) => setPrice(e.target.value)}
-  className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-blue-500 focus:ring-3 focus:ring-blue-100 outline-none transition-all text-sm sm:text-base"
+  className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-brand-500 focus:ring-3 focus:ring-brand-100 outline-none transition-all text-sm sm:text-base"
 />
           </div>
           <div className="flex items-center gap-3 mt-3">
@@ -212,7 +212,7 @@ export default function NewProductForm({
               placeholder="0"
               value={stock}
               onChange={(e) => setStock(e.target.value)}
-              className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-blue-500 focus:ring-3 focus:ring-blue-100 outline-none transition-all text-sm sm:text-base"
+              className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-brand-500 focus:ring-3 focus:ring-brand-100 outline-none transition-all text-sm sm:text-base"
               required
             />
           </div>
@@ -222,7 +222,7 @@ export default function NewProductForm({
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-blue-500 focus:ring-3 focus:ring-blue-100 outline-none transition-all text-sm sm:text-base"
+              className="w-full border border-slate-200 p-3 rounded-xl bg-white focus:border-brand-500 focus:ring-3 focus:ring-brand-100 outline-none transition-all text-sm sm:text-base"
               required
             >
               <option value="">เลือกหมวดหมู่</option>
@@ -248,7 +248,7 @@ export default function NewProductForm({
         <div className="flex flex-col gap-1.5 border-t border-slate-200 pt-5">
           <label className="text-sm font-semibold text-slate-700">รูปภาพสินค้า (อัปโหลดได้หลายรูป)</label>
           <div className="relative flex items-center justify-center w-full">
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-white hover:bg-slate-100/50 hover:border-blue-400 transition-all">
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-white hover:bg-slate-100/50 hover:border-brand-400 transition-all">
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 <span className="text-2xl mb-1">📸</span>
                 <p className="text-sm text-slate-600 font-medium">คลิกเพื่อเลือกไฟล์รูปภาพสินค้า</p>
@@ -301,7 +301,7 @@ export default function NewProductForm({
             className={`w-full sm:w-auto px-8 py-3.5 text-white font-bold rounded-xl shadow-md transition-all ${
               isSubmitting
                 ? "bg-slate-400 cursor-not-allowed shadow-none"
-                : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg active:scale-98"
+                : "bg-brand-600 hover:bg-brand-700 hover:shadow-lg active:scale-98"
             }`}
           >
             {isSubmitting ? (

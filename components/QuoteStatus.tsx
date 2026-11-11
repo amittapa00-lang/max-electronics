@@ -61,7 +61,7 @@ export default function QuoteStatus({
         value={status}
         onChange={(e) => handleChange(e.target.value)}
         disabled={isSaving}
-        className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+        className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-100"
       >
         {statusOptions.map((opt) => (
           <option key={opt.value} value={opt.value}>

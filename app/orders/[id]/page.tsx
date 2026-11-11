@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { canAccessOrder, getAuthUser } from "@/lib/authz";
 import Link from "next/link";
 import {
   AlertTriangle,
   ChevronRight,
   ClipboardList,
+  ExternalLink,
   ImageOff,
   MapPin,
   MessageCircle,
@@ -16,6 +18,8 @@ import {
 import OrderStatusBadge from "@/components/OrderStatusBadge";
 import { SHOP_LINE_URL } from "@/components/SocialIcons";
 import { orderShippingFee } from "@/lib/shipping";
+import { getCarrierTracking } from "@/lib/carriers";
+import CopyButton from "@/components/CopyButton";
 
 const ORDER_STEPS = [
   { label: "รอชำระเงิน", key: "PENDING" },
@@ -53,16 +57,22 @@ export default async function OrderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const orderId = Number(id);
+  if (!Number.isInteger(orderId) || orderId <= 0) notFound();
+
+  const user = await getAuthUser();
+  if (!user) redirect("/login");
 
   const order = await prisma.order.findUnique({
-    where: { id: Number(id) },
+    where: { id: orderId },
     include: {
       items: {
         include: { product: { include: { images: true } } },
       },
     },
   });
-  if (!order) notFound();
+  // ไม่ใช่เจ้าของคำสั่งซื้อ → แสดงเหมือนไม่พบ (ไม่บอกว่ามีคำสั่งซื้อเลขนี้อยู่)
+  if (!order || !canAccessOrder(user, order)) notFound();
 
   const currentStep = getStepIndex(order.status);
   const totalQty = order.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -70,6 +80,7 @@ export default async function OrderDetailPage({
   const itemsTotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingFee = orderShippingFee(order.total, itemsTotal, totalQty);
   const cancellable = order.status !== "COMPLETED" && order.status !== "CANCELLED";
+  const carrier = getCarrierTracking(order.shippingCompany);
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
@@ -121,12 +132,28 @@ export default async function OrderDetailPage({
         )}
 
         {order.trackingNumber && (
-          <div className="mt-5 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-            <Truck className="h-5 w-5 shrink-0 text-brand-600" />
-            <div className="min-w-0">
-              <p className="text-xs text-slate-500">{order.shippingCompany || "ขนส่ง"} · เลขพัสดุ</p>
-              <p className="font-mono text-lg font-bold tracking-wider text-slate-900 break-all">{order.trackingNumber}</p>
+          <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Truck className="h-5 w-5 shrink-0 text-brand-600" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-slate-500">{order.shippingCompany || "ขนส่ง"} · เลขพัสดุ</p>
+                <p className="font-mono text-lg font-bold tracking-wider text-slate-900 break-all">{order.trackingNumber}</p>
+              </div>
+              <CopyButton text={order.trackingNumber} label="คัดลอกเลขพัสดุ" />
             </div>
+            {carrier && (
+              <div className="mt-3 flex flex-col gap-2 border-t border-slate-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs text-slate-500">คัดลอกเลขพัสดุ แล้ววางในช่องค้นหาบนเว็บ {carrier.name}</p>
+                <a
+                  href={carrier.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700"
+                >
+                  ติดตามพัสดุที่เว็บ {carrier.name} <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+            )}
           </div>
         )}
       </section>

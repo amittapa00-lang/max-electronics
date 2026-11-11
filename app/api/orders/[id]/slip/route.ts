@@ -1,3 +1,4 @@
+import { canAccessOrder, getAuthUser } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { writeFile } from "fs/promises";
 import { NextResponse } from "next/server";
@@ -23,6 +24,10 @@ export async function POST(
           id: Number(id),
         },
       });
+
+  if (order && !canAccessOrder(await getAuthUser(), order)) {
+    return NextResponse.json({ error: "ไม่พบคำสั่งซื้อ" }, { status: 404 });
+  }
 
     if (!order) {
       return NextResponse.json(

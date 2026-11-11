@@ -1,408 +1,254 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import type { Prisma } from "@prisma/client";
+import { ChevronLeft, ChevronRight, Inbox, Search } from "lucide-react";
+import OrderStatusBadge from "@/components/OrderStatusBadge";
+import { AdminPage, EmptyState, PageHeader, btn, input } from "@/components/admin/ui";
+
+const PAGE_SIZE = 30;
+
+const TODO_STATUSES = ["WAITING_VERIFY", "PAID", "PREPARING"];
+
+const TABS: { key: string; label: string; statuses?: string[] }[] = [
+  { key: "todo", label: "ต้องดำเนินการ", statuses: TODO_STATUSES },
+  { key: "WAITING_VERIFY", label: "รอตรวจสลิป", statuses: ["WAITING_VERIFY"] },
+  { key: "PAID", label: "รอแพ็ก", statuses: ["PAID"] },
+  { key: "PREPARING", label: "รอส่ง", statuses: ["PREPARING"] },
+  { key: "SHIPPING", label: "กำลังจัดส่ง", statuses: ["SHIPPING"] },
+  { key: "COMPLETED", label: "สำเร็จ", statuses: ["COMPLETED"] },
+  { key: "PENDING", label: "รอชำระ", statuses: ["PENDING"] },
+  { key: "CANCELLED", label: "ยกเลิก", statuses: ["CANCELLED"] },
+  { key: "all", label: "ทั้งหมด" },
+];
+
+/** สิ่งที่แอดมินต้องทำต่อในแต่ละสถานะ */
+const NEXT_TODO: Record<string, string> = {
+  WAITING_VERIFY: "ตรวจสลิป",
+  PENDING: "รอลูกค้าโอน",
+  PAID: "แพ็กสินค้า",
+  PREPARING: "ใส่เลขพัสดุ",
+  SHIPPING: "รอลูกค้าได้รับ",
+};
+
+const dateFmt = new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" });
 
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-  status?: string;
-  search?: string;
-}>;
+  searchParams: Promise<{ status?: string; search?: string; page?: string }>;
 }) {
+  const { status: statusParam, search = "", page: pageParam } = await searchParams;
+  const q = search.trim();
+  const page = Math.max(1, Number(pageParam) || 1);
 
-  const session =
-  await getServerSession(
-    authOptions
-  );
+  const counts = await prisma.order.groupBy({ by: ["status"], _count: { _all: true } });
+  const countOf = (statuses?: string[]) =>
+    counts.filter((c) => !statuses || statuses.includes(c.status)).reduce((s, c) => s + c._count._all, 0);
 
-  const {
-  status,
-  search,
-} = await searchParams;
+  // ค่าเริ่มต้น: ถ้ามีงานค้างให้เปิดแท็บ "ต้องดำเนินการ" ไม่งั้นแสดงทั้งหมด
+  const tabKey = TABS.some((t) => t.key === statusParam)
+    ? statusParam!
+    : countOf(TODO_STATUSES) > 0 && !q
+      ? "todo"
+      : "all";
+  const tab = TABS.find((t) => t.key === tabKey)!;
 
-  const role = (
-    session?.user as {
-      role?: string;
-    } | undefined
-  )?.role;
+  const searchId = /^#?\d+$/.test(q) ? Number(q.replace("#", "")) : null;
+  const where: Prisma.OrderWhereInput = {
+    ...(tab.statuses ? { status: { in: tab.statuses } } : {}),
+    ...(q
+      ? {
+          OR: [
+            ...(searchId ? [{ id: searchId }] : []),
+            { name: { contains: q, mode: "insensitive" } },
+            { phone: { contains: q.replace(/[-\s]/g, "") } },
+            { phone: { contains: q } },
+            { trackingNumber: { contains: q, mode: "insensitive" } },
+            { user: { name: { contains: q, mode: "insensitive" } } },
+            { user: { email: { contains: q, mode: "insensitive" } } },
+          ],
+        }
+      : {}),
+  };
 
-  if (role !== "ADMIN") {
-    redirect("/");
-  }
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      include: { items: { select: { quantity: true } } },
+      // งานค้างเรียงเก่าสุดก่อน (มาก่อนทำก่อน) / แท็บอื่นเรียงล่าสุดก่อน
+      orderBy: { createdAt: tabKey === "todo" || TODO_STATUSES.includes(tabKey) ? "asc" : "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.order.count({ where }),
+  ]);
+  const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-const orders =
-  await prisma.order.findMany({
-    where: {
-      ...(status
-        ? {
-            status,
-          }
-        : {}),
-
-      ...(search
-        ? {
-            OR: [
-              {
-                id: Number(search) || 0,
-              },
-              {
-                user: {
-                  name: {
-                    contains: search,
-                  },
-                },
-              },
-            ],
-          }
-        : {}),
-    },
-
-    include: {
-      user: true,
-    },
-
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-    const statusMap = {
-  PENDING: {
-    label: "🟡 รอชำระเงิน",
-    color: "bg-yellow-100 text-yellow-700",
-  },
-  WAITING_VERIFY: {
-    label: "🟠 รอตรวจสอบสลิป",
-    color: "bg-orange-100 text-orange-700",
-  },
-  PAID: {
-    label: "🟢 ชำระเงินแล้ว",
-    color: "bg-green-100 text-green-700",
-  },
-  PREPARING: {
-    label: "📦 กำลังเตรียมสินค้า",
-    color: "bg-indigo-100 text-indigo-700",
-  },
-  SHIPPING: {
-    label: "🚚 จัดส่งแล้ว",
-    color: "bg-blue-100 text-blue-700",
-  },
-  COMPLETED: {
-    label: "✅ สำเร็จ",
-    color: "bg-purple-100 text-purple-700",
-  },
-  CANCELLED: {
-    label: "❌ ยกเลิก",
-    color: "bg-red-100 text-red-700",
-  },
-};
-
-const preparingCount =
-  await prisma.order.count({
-    where: {
-      status: "PREPARING",
-    },
-  });
-
-const waitingCount =
-  await prisma.order.count({
-    where: {
-      status: "WAITING_VERIFY",
-    },
-  });
-
-const shippingCount =
-  await prisma.order.count({
-    where: {
-      status: "SHIPPING",
-    },
-  });
-  
-
-const cancelCount =
-  await prisma.order.count({
-    where: {
-      status: "CANCELLED",
-    },
-  });
-
-  const totalCount =
-  await prisma.order.count();
+  const href = (params: Record<string, string | number | undefined>) => {
+    const sp = new URLSearchParams();
+    const merged = { status: tabKey, search: q || undefined, ...params };
+    for (const [k, v] of Object.entries(merged)) if (v !== undefined && v !== "") sp.set(k, String(v));
+    return `/admin/orders?${sp.toString()}`;
+  };
 
   return (
+    <AdminPage wide>
+      <PageHeader title="คำสั่งซื้อ" description={`ทั้งหมด ${countOf().toLocaleString()} รายการ · ค้างดำเนินการ ${countOf(TODO_STATUSES)} รายการ`} />
 
-  <main className="max-w-7xl mx-auto px-6 py-8">
+      {/* ค้นหา */}
+      <form method="GET" className="mb-4 flex gap-2">
+        <input type="hidden" name="status" value={tabKey} />
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            name="search"
+            defaultValue={q}
+            placeholder="ค้นหาเลขคำสั่งซื้อ ชื่อ เบอร์โทร อีเมล หรือเลขพัสดุ"
+            className={`${input} pl-9`}
+          />
+        </div>
+        <button className={btn.primary}>ค้นหา</button>
+        {q && (
+          <Link href={href({ search: undefined, page: undefined })} className={btn.secondary}>
+            ล้าง
+          </Link>
+        )}
+      </form>
 
-
-{/* Header */}
-<div className="flex items-center justify-between mb-8">
-  <div>
-    <h1 className="text-4xl font-bold text-slate-800">
-      จัดการคำสั่งซื้อ
-    </h1>
-
-    <p className="text-slate-500 mt-1">
-      รายการคำสั่งซื้อทั้งหมด ({totalCount} รายการ)
-    </p>
-  </div>
-</div>
-
-{/* Search */}
-<div className="bg-white border rounded-xl p-4 mb-6">
-  <form method="GET" className="flex gap-3">
-
-    <input
-      type="text"
-      name="search"
-      defaultValue={search}
-      placeholder="ค้นหาเลข Order หรือชื่อลูกค้า..."
-      className="
-        flex-1
-        border
-        rounded-lg
-        px-4
-        py-2
-      "
-    />
-
-    {status && (
-      <input
-        type="hidden"
-        name="status"
-        value={status}
-      />
-    )}
-
-    <button
-      className="
-        bg-blue-600
-        hover:bg-blue-700
-        text-white
-        px-6
-        rounded-lg
-        transition
-      "
-    >
-      ค้นหา
-    </button>
-
-  </form>
-</div>
-
-{/* Stats */}
-<div className="grid md:grid-cols-4 gap-4 mb-6">
-
-  <div className="bg-orange-50 border rounded-xl p-5">
-    <p className="text-sm text-slate-500">
-      รอตรวจสอบสลิป
-    </p>
-
-    <p className="text-3xl font-bold text-orange-600 mt-2">
-      {waitingCount}
-    </p>
-  </div>
-
-  <div className="bg-indigo-50 border rounded-xl p-5">
-    <p className="text-sm text-slate-500">
-      กำลังเตรียมสินค้า
-    </p>
-
-    <p className="text-3xl font-bold text-indigo-600 mt-2">
-      {preparingCount}
-    </p>
-  </div>
-
-  <div className="bg-blue-50 border rounded-xl p-5">
-    <p className="text-sm text-slate-500">
-      กำลังจัดส่ง
-    </p>
-
-    <p className="text-3xl font-bold text-blue-600 mt-2">
-      {shippingCount}
-    </p>
-  </div>
-
-  <div className="bg-red-50 border rounded-xl p-5">
-    <p className="text-sm text-slate-500">
-      ยกเลิก
-    </p>
-
-    <p className="text-3xl font-bold text-red-600 mt-2">
-      {cancelCount}
-    </p>
-  </div>
-
-</div>
-
-{/* Filter */}
-<div className="flex flex-wrap gap-2 mb-6">
-
-  <Link
-    href="/admin/orders"
-    className={`px-4 py-2 rounded-lg border transition ${
-      !status
-        ? "bg-blue-600 text-white border-blue-600"
-        : "bg-white hover:bg-slate-50"
-    }`}
-  >
-    ทั้งหมด
-  </Link>
-
-  <Link
-    href="/admin/orders?status=WAITING_VERIFY"
-    className={`px-4 py-2 rounded-lg border transition ${
-      status === "WAITING_VERIFY"
-        ? "bg-blue-600 text-white border-blue-600"
-        : "bg-white hover:bg-slate-50"
-    }`}
-  >
-    รอตรวจสอบ
-  </Link>
-
-  <Link
-    href="/admin/orders?status=PREPARING"
-    className={`px-4 py-2 rounded-lg border transition ${
-      status === "PREPARING"
-        ? "bg-blue-600 text-white border-blue-600"
-        : "bg-white hover:bg-slate-50"
-    }`}
-  >
-    เตรียมสินค้า
-  </Link>
-
-  <Link
-    href="/admin/orders?status=SHIPPING"
-    className={`px-4 py-2 rounded-lg border transition ${
-      status === "SHIPPING"
-        ? "bg-blue-600 text-white border-blue-600"
-        : "bg-white hover:bg-slate-50"
-    }`}
-  >
-    จัดส่ง
-  </Link>
-
-  <Link
-    href="/admin/orders?status=COMPLETED"
-    className={`px-4 py-2 rounded-lg border transition ${
-      status === "COMPLETED"
-        ? "bg-blue-600 text-white border-blue-600"
-        : "bg-white hover:bg-slate-50"
-    }`}
-  >
-    สำเร็จ
-  </Link>
-
-  <Link
-    href="/admin/orders?status=CANCELLED"
-    className={`px-4 py-2 rounded-lg border transition ${
-      status === "CANCELLED"
-        ? "bg-blue-600 text-white border-blue-600"
-        : "bg-white hover:bg-slate-50"
-    }`}
-  >
-    ยกเลิก
-  </Link>
-
-</div>
-
-{/* Orders */}
-<div className="space-y-4">
-
-  {orders.map((order) => (
-    <div
-      key={order.id}
-      className="
-        bg-white
-        border
-        rounded-xl
-        p-5
-        hover:border-blue-300
-        transition
-      "
-    >
-      <div className="flex justify-between items-center">
-
-        <div>
-
-          <div className="flex items-center gap-3 mb-2">
-
-            <h2 className="font-bold text-lg">
-              Order #{order.id}
-            </h2>
-
-            <div
-              className={`px-3 py-1 rounded-full text-xs font-bold ${
-                statusMap[
-                  order.status as keyof typeof statusMap
-                ]?.color
+      {/* แท็บสถานะ */}
+      <div className="no-scrollbar -mx-4 mb-4 flex gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+        {TABS.map((t) => {
+          const n = countOf(t.statuses);
+          const active = t.key === tabKey;
+          return (
+            <Link
+              key={t.key}
+              href={href({ status: t.key, page: undefined })}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition ${
+                active ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
               }`}
             >
-              {
-                statusMap[
-                  order.status as keyof typeof statusMap
-                ]?.label
-              }
-            </div>
-
-          </div>
-
-          <p className="font-medium">
-            {order.user.name}
-          </p>
-
-          <p className="text-sm text-slate-500">
-            {order.user.email}
-          </p>
-
-          <p className="text-sm text-slate-400 mt-1">
-            {new Date(
-              order.createdAt
-            ).toLocaleDateString("th-TH")}
-          </p>
-
-          {order.trackingNumber && (
-            <p className="text-blue-600 text-sm mt-2">
-              🚚 {order.trackingNumber}
-            </p>
-          )}
-        </div>
-
-        <div className="text-right">
-
-          <p className="text-2xl font-bold text-green-600">
-            ฿{order.total.toLocaleString()}
-          </p>
-
-          <Link
-            href={`/admin/orders/${order.id}`}
-            className="
-              inline-block
-              mt-3
-              bg-blue-600
-              hover:bg-blue-700
-              text-white
-              px-4
-              py-2
-              rounded-lg
-              transition
-            "
-          >
-            ดูรายละเอียด
-          </Link>
-
-        </div>
-
+              {t.label}
+              <span className={`rounded-full px-1.5 text-xs ${active ? "bg-white/20" : "bg-slate-100 text-slate-500"}`}>{n}</span>
+            </Link>
+          );
+        })}
       </div>
-    </div>
-  ))}
 
-</div>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        {orders.length === 0 ? (
+          <EmptyState
+            icon={Inbox}
+            title={q ? "ไม่พบคำสั่งซื้อที่ค้นหา" : tabKey === "todo" ? "ไม่มีงานค้าง 🎉" : "ไม่มีคำสั่งซื้อในสถานะนี้"}
+            hint={q ? "ลองค้นด้วยเลขคำสั่งซื้อ หรือเบอร์โทร" : undefined}
+          />
+        ) : (
+          <>
+            {/* ตาราง (จอใหญ่) */}
+            <table className="hidden w-full text-sm md:table">
+              <thead className="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">คำสั่งซื้อ</th>
+                  <th className="px-4 py-3">ผู้รับ</th>
+                  <th className="px-4 py-3 text-right">ยอดรวม</th>
+                  <th className="px-4 py-3">สถานะ</th>
+                  <th className="px-4 py-3">ต้องทำต่อ</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {orders.map((o) => {
+                  const qty = o.items.reduce((s, i) => s + i.quantity, 0);
+                  const todo = NEXT_TODO[o.status];
+                  return (
+                    <tr key={o.id} className="group hover:bg-slate-50">
+                      <td className="px-4 py-3">
+                        <Link href={`/admin/orders/${o.id}`} className="font-semibold text-slate-900 group-hover:text-brand-700">
+                          #{o.id}
+                        </Link>
+                        <p className="text-xs text-slate-500">{dateFmt.format(o.createdAt)}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-slate-900">{o.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {o.phone} · {qty} ชิ้น
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-slate-900">฿{o.total.toLocaleString()}</td>
+                      <td className="px-4 py-3">
+                        <OrderStatusBadge status={o.status} />
+                        {o.trackingNumber && <p className="mt-1 font-mono text-xs text-slate-500">{o.trackingNumber}</p>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {todo && TODO_STATUSES.includes(o.status) ? (
+                          <span className="font-semibold text-brand-700">{todo}</span>
+                        ) : (
+                          <span className="text-slate-400">{todo ?? "-"}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Link href={`/admin/orders/${o.id}`} className={`${btn.secondary} h-8 px-3`}>
+                          เปิด
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
+            {/* การ์ด (มือถือ) */}
+            <ul className="divide-y divide-slate-100 md:hidden">
+              {orders.map((o) => {
+                const todo = NEXT_TODO[o.status];
+                return (
+                  <li key={o.id}>
+                    <Link href={`/admin/orders/${o.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-slate-50">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900">#{o.id}</span>
+                          <OrderStatusBadge status={o.status} />
+                        </div>
+                        <p className="mt-0.5 truncate text-sm text-slate-700">
+                          {o.name} · {o.phone}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {dateFmt.format(o.createdAt)}
+                          {todo && TODO_STATUSES.includes(o.status) && (
+                            <span className="font-semibold text-brand-700"> · ต้อง{todo}</span>
+                          )}
+                        </p>
+                      </div>
+                      <span className="font-semibold text-slate-900">฿{o.total.toLocaleString()}</span>
+                      <ChevronRight className="h-4 w-4 text-slate-300" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+      </div>
 
-  </main>
-);
-
+      {pages > 1 && (
+        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+          <span>
+            หน้า {page} / {pages} ({total.toLocaleString()} รายการ)
+          </span>
+          <div className="flex gap-2">
+            {page > 1 && (
+              <Link href={href({ page: page - 1 })} className={`${btn.secondary} h-9`}>
+                <ChevronLeft className="h-4 w-4" /> ก่อนหน้า
+              </Link>
+            )}
+            {page < pages && (
+              <Link href={href({ page: page + 1 })} className={`${btn.secondary} h-9`}>
+                ถัดไป <ChevronRight className="h-4 w-4" />
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </AdminPage>
+  );
 }

@@ -134,8 +134,8 @@ export default function EditProductForm({
   return (
     <main className="min-h-screen bg-slate-50">
       <form onSubmit={handleSubmit}>
-        <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
-          <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+        <div className="sticky top-14 z-20 border-b border-slate-200 bg-white/90 backdrop-blur lg:top-0">
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
                 จัดการสินค้า
@@ -155,7 +155,7 @@ export default function EditProductForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
+                className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-sm shadow-brand-200 transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-300"
               >
                 {isSubmitting
                   ? uploadProgress || "กำลังบันทึก..."
@@ -165,7 +165,7 @@ export default function EditProductForm({
           </div>
         </div>
 
-        <div className="mx-auto max-w-4xl space-y-6 px-6 py-8">
+        <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6">
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-5">
               <h2 className="text-base font-semibold text-slate-900">
@@ -175,15 +175,15 @@ export default function EditProductForm({
             <div className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">ชื่อสินค้า</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-indigo-500" />
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500" />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">รหัสสินค้า</label>
-                <input type="text" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full rounded-lg border border-slate-300 px-4 py-2.5 font-mono text-sm outline-none transition focus:border-indigo-500" />
+                <input type="text" value={productCode} onChange={(e) => setProductCode(e.target.value)} className="w-full rounded-lg border border-slate-300 px-4 py-2.5 font-mono text-sm outline-none transition focus:border-brand-500" />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">รายละเอียดสินค้า</label>
-                <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="h-36 w-full resize-none rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-indigo-500" />
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="h-36 w-full resize-none rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500" />
               </div>
             </div>
           </section>
@@ -210,7 +210,7 @@ export default function EditProductForm({
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-5 text-base font-semibold text-slate-900">หมวดหมู่</h2>
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-indigo-500">
+            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-brand-500">
               <option value="">เลือกหมวดหมู่</option>
               {categories.filter((cat) => !cat.parent).map((parent) => (
                 <optgroup key={parent.id} label={parent.name}>
@@ -237,11 +237,11 @@ export default function EditProductForm({
             )}
             {newImagePreviews.map((preview, idx) => (
               <div key={idx} className="group relative">
-                <Image src={preview.url} alt="new" width={112} height={112} className="h-28 w-28 rounded-xl border border-indigo-200 object-cover" />
+                <Image src={preview.url} alt="new" width={112} height={112} className="h-28 w-28 rounded-xl border border-brand-200 object-cover" />
                 <button type="button" onClick={() => removeNewImage(idx)} className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white">×</button>
               </div>
             ))}
-            <label onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={(e) => { e.preventDefault(); setIsDragging(false); addFiles(e.dataTransfer.files); }} className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 ${isDragging ? "border-indigo-500 bg-indigo-50" : "border-slate-300 bg-slate-50"}`}>
+            <label onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }} onDragLeave={() => setIsDragging(false)} onDrop={(e) => { e.preventDefault(); setIsDragging(false); addFiles(e.dataTransfer.files); }} className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 ${isDragging ? "border-brand-500 bg-brand-50" : "border-slate-300 bg-slate-50"}`}>
               <span>📷 ลากรูปมาวางที่นี่</span>
               <input type="file" accept="image/*" multiple onChange={(e) => e.target.files && addFiles(e.target.files)} className="hidden" />
             </label>

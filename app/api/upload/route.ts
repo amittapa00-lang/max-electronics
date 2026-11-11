@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/authz";
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -8,6 +9,9 @@ cloudinary.config({
 });
 
 export async function POST(req: Request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   try {
     const formData = await req.formData();
 
