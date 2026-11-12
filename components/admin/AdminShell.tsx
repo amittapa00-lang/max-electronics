@@ -113,15 +113,15 @@ export default function AdminShell({
   );
 
   return (
-    <div className="admin-root min-h-screen bg-slate-50">
+    <div className="admin-root min-h-screen bg-slate-50 print:min-h-0 print:bg-white">
       {/* Sidebar (Desktop) */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-slate-200 bg-white lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-slate-200 bg-white lg:flex print:hidden!">
         <div className="flex h-16 items-center border-b border-slate-100 px-4">{brand}</div>
         {nav}
       </aside>
 
       {/* Top bar (Mobile) */}
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-3 lg:hidden">
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-slate-200 bg-white px-3 lg:hidden print:hidden">
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -163,7 +163,7 @@ export default function AdminShell({
         </div>
       )}
 
-      <div className="lg:pl-60">{children}</div>
+      <div className="lg:pl-60 print:pl-0!">{children}</div>
     </div>
   );
 }

@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { ExternalLink, ImageOff, Phone } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, ImageOff, Phone, Printer } from "lucide-react";
 import { orderShippingFee } from "@/lib/shipping";
 import OrderStatusBadge from "@/components/OrderStatusBadge";
 import OrderWorkflow from "@/components/admin/OrderWorkflow";
 import CopyButton from "@/components/CopyButton";
-import { AdminPage, Card, PageHeader } from "@/components/admin/ui";
+import { AdminPage, Card, PageHeader, btn } from "@/components/admin/ui";
 
 const STEPS = [
   { key: "WAITING_VERIFY", label: "ตรวจสลิป" },
@@ -55,6 +56,11 @@ export default async function AdminOrderDetailPage({
           </span>
         }
         description={`สั่งเมื่อ ${dateFmt.format(order.createdAt)} · ${totalQty} ชิ้น · ยอดรวม ฿${grandTotal.toLocaleString()}`}
+        actions={
+          <Link href={`/admin/orders/labels?ids=${order.id}`} target="_blank" className={btn.secondary}>
+            <Printer className="h-4 w-4" /> พิมพ์ใบปะหน้า
+          </Link>
+        }
       />
 
       {/* แถบขั้นตอน */}

@@ -1,13 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
-import { ChevronLeft, ChevronRight, Inbox, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Inbox, Printer, Search } from "lucide-react";
 import OrderStatusBadge from "@/components/OrderStatusBadge";
 import { AdminPage, EmptyState, PageHeader, btn, input } from "@/components/admin/ui";
 
 const PAGE_SIZE = 30;
 
 const TODO_STATUSES = ["WAITING_VERIFY", "PAID", "PREPARING"];
+const LABEL_STATUSES = ["PAID", "PREPARING", "SHIPPING"];
 
 const TABS: { key: string; label: string; statuses?: string[] }[] = [
   { key: "todo", label: "ต้องดำเนินการ", statuses: TODO_STATUSES },
@@ -84,6 +85,9 @@ export default async function AdminOrdersPage({
   ]);
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  // ใบปะหน้า: เฉพาะออเดอร์ที่ชำระแล้วและยังไม่จบ ในหน้านี้
+  const labelIds = orders.filter((o) => LABEL_STATUSES.includes(o.status)).map((o) => o.id);
+
   const href = (params: Record<string, string | number | undefined>) => {
     const sp = new URLSearchParams();
     const merged = { status: tabKey, search: q || undefined, ...params };
@@ -93,7 +97,17 @@ export default async function AdminOrdersPage({
 
   return (
     <AdminPage wide>
-      <PageHeader title="คำสั่งซื้อ" description={`ทั้งหมด ${countOf().toLocaleString()} รายการ · ค้างดำเนินการ ${countOf(TODO_STATUSES)} รายการ`} />
+      <PageHeader
+        title="คำสั่งซื้อ"
+        description={`ทั้งหมด ${countOf().toLocaleString()} รายการ · ค้างดำเนินการ ${countOf(TODO_STATUSES)} รายการ`}
+        actions={
+          labelIds.length > 0 && (
+            <Link href={`/admin/orders/labels?ids=${labelIds.join(",")}`} target="_blank" className={btn.secondary}>
+              <Printer className="h-4 w-4" /> พิมพ์ใบปะหน้า ({labelIds.length})
+            </Link>
+          )
+        }
+      />
 
       {/* ค้นหา */}
       <form method="GET" className="mb-4 flex gap-2">
