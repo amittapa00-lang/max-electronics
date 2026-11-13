@@ -185,12 +185,14 @@ export default async function QuoteDetailPage({
                 </div>
               )}
 
-              <div className="grid grid-cols-3 gap-2 py-3">
-                <dt className="text-sm text-slate-500">จำนวน</dt>
-                <dd className="col-span-2 text-sm font-semibold text-slate-900">
-                  {quote.quantity.toLocaleString()} ชิ้น
-                </dd>
-              </div>
+              {quote.product && (
+                <div className="grid grid-cols-3 gap-2 py-3">
+                  <dt className="text-sm text-slate-500">จำนวน</dt>
+                  <dd className="col-span-2 text-sm font-semibold text-slate-900">
+                    {quote.quantity.toLocaleString()} ชิ้น
+                  </dd>
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-2 py-3 last:pb-0">
                 <dt className="text-sm text-slate-500">หมายเหตุ</dt>
@@ -209,9 +211,22 @@ export default async function QuoteDetailPage({
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
                 📦
               </span>
-              <h2 className="text-base font-semibold text-slate-900">สินค้า</h2>
+              <h2 className="text-base font-semibold text-slate-900">
+                {quote.product ? "สินค้า" : "รายการที่ลูกค้าต้องการ"}
+              </h2>
             </div>
 
+            {!quote.product ? (
+              <div>
+                <p className="mb-3 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                  ลูกค้าระบุเอง (ไม่ได้เลือกจากสินค้าในเว็บ)
+                </p>
+                <p className="whitespace-pre-line rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-800">
+                  {quote.items || "-"}
+                </p>
+              </div>
+            ) : (
+            <>
             {quote.product.images.length > 0 && (
               <Image
                 src={quote.product.images[0].imageUrl}
@@ -251,6 +266,8 @@ export default async function QuoteDetailPage({
                 )}
               </div>
             </div>
+            </>
+            )}
           </div>
         </div>
       </div>

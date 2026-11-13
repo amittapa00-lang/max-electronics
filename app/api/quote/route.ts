@@ -26,7 +26,12 @@ export async function POST(req: Request) {
       quantity,
       note,
       productId,
+      items,
     } = await req.json();
+
+    // มี productId = ขอราคาสินค้าตัวนั้น / ไม่มี = ขอใบเสนอราคาทั่วไป (ลูกค้าพิมพ์รายการเอง)
+    const isGeneral = productId === undefined || productId === null || productId === "";
+    const itemsText = typeof items === "string" ? items.trim().slice(0, 3000) : "";
 
     if (
       !contactName ||
@@ -51,13 +56,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const product = await prisma.product.findUnique({
-      where: {
-        id: Number(productId),
-      },
-    });
+    if (isGeneral && !itemsText) {
+      return NextResponse.json({ error: "กรุณาระบุรายการสินค้าที่ต้องการ" }, { status: 400 });
+    }
 
-    if (!product) {
+    const product = isGeneral
+      ? null
+      : await prisma.product.findUnique({
+          where: {
+            id: Number(productId),
+          },
+        });
+
+    if (!isGeneral && !product) {
       return NextResponse.json(
         { error: "ไม่พบสินค้า" },
         { status: 404 }
@@ -70,9 +81,10 @@ export async function POST(req: Request) {
         contactName,
         email,
         phone,
-        quantity: Number(quantity),
+        quantity: isGeneral ? 1 : Math.max(1, Number(quantity) || 1),
         note,
-        productId: Number(productId),
+        productId: product ? product.id : null,
+        items: itemsText || null,
 
         customerType,
         firstName,
@@ -91,8 +103,9 @@ export async function POST(req: Request) {
     try {
       await sendQuoteNotification({
         quoteId: quote.id,
-        productName: product.name,
-        quantity: Number(quantity),
+        productName: product?.name ?? null,
+        quantity: product ? Number(quantity) : null,
+        items: itemsText || null,
         customerName: contactName,
         email,
         phone,

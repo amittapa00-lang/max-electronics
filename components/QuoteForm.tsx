@@ -17,10 +17,12 @@ export default function QuoteForm({
   productName,
   productCode,
 }: {
-  productId: number;
-  productName: string;
-  productCode: string;
+  /** ไม่ส่ง = ขอใบเสนอราคาทั่วไป ให้ลูกค้าพิมพ์รายการสินค้าเอง */
+  productId?: number;
+  productName?: string;
+  productCode?: string;
 }) {
+  const isGeneral = productId === undefined;
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -47,6 +49,7 @@ export default function QuoteForm({
   // รายละเอียดที่ต้องการ
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState("");
+  const [items, setItems] = useState("");
 
   const selectedProvince = useMemo(
     () => provinces.find((p) => String(p.id) === provinceId),
@@ -88,6 +91,7 @@ export default function QuoteForm({
 
     const payload = {
       productId,
+      items: isGeneral ? items : undefined,
       quantity: Number(quantity),
       note,
 
@@ -346,25 +350,42 @@ export default function QuoteForm({
       <div className="flex flex-col gap-4">
         <label className={labelClass}>รายละเอียดสินค้าที่ต้องการ</label>
 
-        <div className="rounded-xl bg-slate-50 border border-gray-200 p-4">
-          <p className="text-xs text-slate-500">สินค้า</p>
-          <p className="font-bold text-lg">{productName}</p>
+        {isGeneral ? (
+          <div className="flex flex-col gap-2">
+            <textarea
+              value={items}
+              onChange={(e) => setItems(e.target.value)}
+              rows={6}
+              required
+              maxLength={3000}
+              placeholder={"ระบุยี่ห้อ / รุ่น / จำนวน บรรทัดละ 1 รายการ เช่น\nIDEC HW1B-M110B สีดำ × 20 ตัว\nOMRON E3Z-R61 × 5 ตัว"}
+              className={inputClass}
+            />
+            <p className="text-xs text-slate-500">ไม่ทราบรุ่น? อธิบายการใช้งานหรือแนบรุ่นเดิมที่ใช้อยู่ไว้ในหมายเหตุได้</p>
+          </div>
+        ) : (
+          <>
+            <div className="rounded-xl bg-slate-50 border border-gray-200 p-4">
+              <p className="text-xs text-slate-500">สินค้า</p>
+              <p className="font-bold text-lg">{productName}</p>
 
-          <p className="text-xs text-slate-500 mt-3">รหัสสินค้า</p>
-          <p className="font-semibold">{productCode || "-"}</p>
-        </div>
+              <p className="text-xs text-slate-500 mt-3">รหัสสินค้า</p>
+              <p className="font-semibold">{productCode || "-"}</p>
+            </div>
 
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>จำนวนที่ต้องการ</label>
-          <input
-            type="number"
-            min="1"
-            value={quantity}
-            onChange={(e) => setQuantity(Number(e.target.value))}
-            required
-            className={inputClass}
-          />
-        </div>
+            <div className="flex flex-col gap-2">
+              <label className={labelClass}>จำนวนที่ต้องการ</label>
+              <input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+                required
+                className={inputClass}
+              />
+            </div>
+          </>
+        )}
 
         <div className="flex flex-col gap-2">
           <label className={labelClass}>หมายเหตุ / Remarks</label>

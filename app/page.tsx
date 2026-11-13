@@ -193,14 +193,12 @@ export default async function Home() {
               </p>
             </div>
             <div className="relative flex flex-col sm:flex-row gap-3">
-              <a
-                href={SHOP_LINE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/quote"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-brand-700 hover:bg-brand-50 transition-colors"
               >
-                <LineIcon className="h-4 w-4 text-[#06C755]" /> ขอใบเสนอราคา
-              </a>
+                <FileText className="h-4 w-4" /> ขอใบเสนอราคา
+              </Link>
               <a
                 href={SHOP_PHONE_TEL}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-white/40 px-6 text-sm font-semibold text-white hover:bg-white/10 transition-colors"

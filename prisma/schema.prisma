@@ -181,8 +181,11 @@ model Quote {
   subDistrict  String?
   zipCode      String?
 
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
+  // รายการสินค้าที่ลูกค้าพิมพ์เอง (ขอใบเสนอราคาทั่วไป ไม่ผูกกับสินค้าในระบบ)
+  items String?
+
+  productId Int?
+  product   Product? @relation(fields: [productId], references: [id])
 }
 
 model PageView {

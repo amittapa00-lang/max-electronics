@@ -55,6 +55,7 @@ export default async function QuotesPage({
                 name: { contains: q, mode: "insensitive" },
               },
             },
+            { items: { contains: q, mode: "insensitive" } },
           ],
         }
       : {}),
@@ -191,11 +192,18 @@ export default async function QuotesPage({
                         </td>
 
                         <td className="px-5 py-4 text-slate-700">
-                          {quote.product.name}
+                          {quote.product ? (
+                            quote.product.name
+                          ) : (
+                            <span title={quote.items ?? ""}>
+                              <span className="mr-1.5 rounded bg-amber-50 px-1.5 py-0.5 text-xs font-semibold text-amber-700">ระบุเอง</span>
+                              {(quote.items ?? "").split(/\r?\n/)[0].slice(0, 60)}
+                            </span>
+                          )}
                         </td>
 
                         <td className="whitespace-nowrap px-5 py-4 text-right text-slate-700">
-                          {quote.quantity.toLocaleString()}
+                          {quote.product ? quote.quantity.toLocaleString() : "-"}
                         </td>
 
                         <td className="whitespace-nowrap px-5 py-4">

@@ -8,10 +8,16 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// กันข้อความที่ลูกค้าพิมพ์ถูกตีความเป็น HTML ในอีเมล
+const esc = (v: unknown) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[c]!);
+
 export async function sendQuoteNotification(data: {
   quoteId: number;
-  productName: string;
-  quantity: number;
+  /** ไม่มี = ขอใบเสนอราคาทั่วไป (ดู items) */
+  productName?: string | null;
+  quantity?: number | null;
+  items?: string | null;
   customerName: string;
   email: string;
   phone: string;
@@ -38,18 +44,23 @@ export async function sendQuoteNotification(data: {
 
         <h3>ข้อมูลลูกค้า</h3>
 
-        <p><strong>ชื่อ:</strong> ${data.customerName}</p>
-        <p><strong>บริษัท:</strong> ${data.companyName || "-"}</p>
-        <p><strong>อีเมล:</strong> ${data.email}</p>
-        <p><strong>โทรศัพท์:</strong> ${data.phone}</p>
+        <p><strong>ชื่อ:</strong> ${esc(data.customerName)}</p>
+        <p><strong>บริษัท:</strong> ${esc(data.companyName || "-")}</p>
+        <p><strong>อีเมล:</strong> ${esc(data.email)}</p>
+        <p><strong>โทรศัพท์:</strong> ${esc(data.phone)}</p>
 
         <h3>ข้อมูลสินค้า</h3>
 
-        <p><strong>สินค้า:</strong> ${data.productName}</p>
-        <p><strong>จำนวน:</strong> ${data.quantity}</p>
+        ${
+          data.productName
+            ? `<p><strong>สินค้า:</strong> ${esc(data.productName)}</p>
+        <p><strong>จำนวน:</strong> ${esc(data.quantity)}</p>`
+            : ""
+        }
+        ${data.items ? `<p><strong>รายการที่ลูกค้าต้องการ:</strong><br />${esc(data.items).replace(/\n/g, "<br />")}</p>` : ""}
 
         <p><strong>หมายเหตุ:</strong><br />
-        ${data.note || "-"}</p>
+        ${esc(data.note || "-")}</p>
 
         <hr />
 
